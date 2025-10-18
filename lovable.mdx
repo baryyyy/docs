@@ -1,22 +1,36 @@
 ---
-title: "Development"
-description: "Preview changes locally to update your docs"
+title: "חיבור סליקה לאפליקציית Lovable"
 ---
 
 <Info>
-  **Prerequisites**:
+  **דרישות התהליך:**
 
-  - Node.js version 19 or higher
-  - A docs repository with a `docs.json` file
+  - חשבון פייפאל עסקי מאושר
+  - דף מוכן לבחירת חבילות / תשלום באפליקציה שלכם
+  - חשבון ספליטז מוגדר ומאושר לתשלום
 </Info>
 
-Follow these steps to install and run Mintlify on your operating system.
+תהליך האינטגרציה מורכב מ3 שלבים מאוד פשוט שמבוססים על הגיון פשוט:
+
+זיהוי לקוח ותשלום -\> ולידציה לאחר תשלום -\> יצירת לינק ניהול ללקוחות
+
+בהתחלה, ברגע שלקוח מבקש ממכם להירשם לחבילה מסויימת, אתם תהיו חייבים לשייך לינק לתשלום עם המייל שלו אצלנו במערכת
+
+<Info>
+  **מה זה לינק לתשלום?**
+
+  לינק לתשלום הוא דף תשלום שהמערכת שלנו משייכת ללקוח שלכם, הדרך שלנו לזהות מי ביצע את התשלום אצלכם הוא על ידי המייל של הלקוח, ולכן ברגע שלקוח מעוניין להירשם לחבילה אצלכם אתם חייבים להגיד לנו מי רוצה לשלם כדי שאחרי זה תוכלו לוודא שאותו לקוח שילם אחרי הרכישה, ולתת לו גישה למערכת שלכם.
+</Info>
+
+אחרי שהבנתם את הרקע הטכני, בואו נתחיל בהגדרה של לינק התשלום אצלכם במערכת.
+
+<Danger>
+  חשוב מאוד שכל הקריאות שאתם מבצעים למערכת שלנו, חייבות להיות לא חשופות לצד הלקוח על מנת לשמור על תהליך התשלום שלכם מאובטח. בLovable ניתן לעשות זאת באמצעות פיצר שנקרא Backend Function.
+</Danger>
 
 <Steps>
-  <Step title="Install the Mintlify CLI">
-    ```bash
-    npm i -g mint
-    ```
+  <Step title="זיהוי לקוח ותשלום">
+    
   </Step>
   <Step title="Preview locally">
     Navigate to your docs directory where your `docs.json` file is located, and run the following command:
@@ -27,9 +41,11 @@ Follow these steps to install and run Mintlify on your operating system.
 
     A local preview of your documentation will be available at `http://localhost:3000`.
   </Step>
+  <Step title="New Step">
+    
+  </Step>
 </Steps>
 
-## Custom ports בדיקה
 
 By default, Mintlify uses port 3000. You can customize the port Mintlify runs on by using the `--port` flag. For example, to run Mintlify on port 3333, use this command:
 
