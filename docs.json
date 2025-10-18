@@ -14,14 +14,14 @@
   "navigation": {
     "tabs": [
       {
-        "tab": "Guides",
+        "tab": "מדריכים",
         "groups": [
           {
-            "group": "Getting started",
+            "group": "פלטפורמות NO CODE",
             "pages": [
               "index",
               "quickstart",
-              "development"
+              "lovable"
             ]
           },
           {
