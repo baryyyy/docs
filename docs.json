@@ -20,7 +20,8 @@
             "group": "פלטפורמות NO CODE",
             "pages": [
               "index",
-              "lovable"
+              "lovable",
+              "lovable-onetime"
             ]
           }
         ]
