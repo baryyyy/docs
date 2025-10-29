@@ -155,16 +155,7 @@ const splitz = new SplitzClient({
 
   ---
 
-  ### 3. טפל בכישלונות
-
-  אם התשלום נכשל או הלקוח סוגר את הדף:
-
-  ```
-  "נראה שהתשלום לא הושלם.
-  רוצה לנסות שוב? [כן] [לא, תודה]"
-  ```
-
-  ### 4. שמור היסטוריה
+  ### 3. שמור היסטוריה
 
   תאפשר ללקוח לראות את כל הרכישות שלו:
 
@@ -302,57 +293,6 @@ window.location.href = paymentUrl;
   **תמיד** תאמת בצד השרת שההזמנה באמת שולמה! 🔐
 </Warning>
 
-```javascript
-// בעמוד ההצלחה (Backend Function - לא בצד לקוח!):
-
-const SplitzClient = require('splitz-payments');
-
-const splitz = new SplitzClient({
-  apiKey: 'YOUR_API_KEY_HERE'
-});
-
-// קרא את ה-order_uid מה-URL
-const urlParams = new URLSearchParams(window.location.search);
-const orderUid = urlParams.get('uid') || urlParams.get('order_uid');
-
-if (!orderUid) {
-  console.error('❌ חסר order_uid');
-  alert('משהו השתבש. אנא צור קשר עם התמיכה.');
-  return;
-}
-
-// ✅ בדוק אם ההזמנה באמת שולמה
-const status = await splitz.orders.isPaid(orderUid);
-
-if (status.paid) {
-  console.log('✅ ההזמנה שולמה!');
-  
-  // שלוף פרטי הזמנה מלאים
-  const response = await splitz.orders.get(orderUid);
-  const order = response.order;
-  
-  console.log('מזהה:', order.uid);
-  console.log('אימייל:', order.email);
-  console.log('מחיר:', order.price, order.currency);
-  console.log('תאריך תשלום:', order.paid_at);
-  
-  // שמור בדאטאבייס שהלקוח שילם
-  // await db.purchases.create({
-  //   order_uid: order.uid,
-  //   email: order.email,
-  //   amount: order.price,
-  //   paid_at: order.paid_at
-  // });
-  
-  // תן ללקוח גישה למוצר
-  alert('תשלום הצליח! יש לך גישה עכשיו 🎉');
-  
-} else {
-  console.log('⏳ ההזמנה ממתינה לתשלום');
-  alert('התשלום עדיין בתהליך. אנא המתן...');
-}
-```
-
 ---
 
 ## Order Object - מבנה נתונים
@@ -405,28 +345,10 @@ const paymentLink = await splitz.paymentLinks.generate({
   customer_email: 'מייל המשתמש המחובר'
 });
 
-// הפנה ללינק
-window.location.href = paymentLink.url;
+לאחר מכן תוכל להחזיר לצד הלקוח את הלינק שחזר מהמשתנה paymentLink
 ````
 
 צור עמוד חדש "purchase-success" שמאמת את התשלום:
-
-```javascript
-const urlParams = new URLSearchParams(window.location.search);
-const orderUid = urlParams.get('uid') || urlParams.get('order_uid');
-
-// אימות
-const status = await splitz.orders.isPaid(orderUid);
-
-if (status.paid) {
-  const order = await splitz.orders.get(orderUid);
-  
-  // שמור בדאטאבייס שהלקוח שילם
-  // תן גישה למוצר
-  
-  alert('התשלום הצליח! 🎉');
-}
-```
 
 אל תשתמש ב-ENV - הכנס את ה-API Key כמחרוזת ישירות. הקוד חייב להיות Backend Function, לא בצד לקוח!
 
