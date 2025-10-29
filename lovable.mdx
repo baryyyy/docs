@@ -47,7 +47,7 @@ title: "חיבור סליקה לאפליקציית Lovable"
 
     אחרי ששיניתם את הדברים האלו תוכלו לשלוח לAI את הפרומט.
 
-    ``` expandable
+    ```expandable
     עכשיו אדריך אותך בעת לחיצה על כפתור התשלום, אני רוצה שתשתמש בחבילת NPM שנקראת splitz-payments על מנת לחבר את הסליקה למערכת שלי באופן שלא חשוף לצד לקוח, אני רוצה שתיצור לינק לתשלום שמשוייך ללקוח שכרגע מחובר, ולאחר מכן תעביר אותו ללינק שמשוייך אליו.
     
     דוגמא ליצירת לינק לתשלום שמשוייך ללקוח:
@@ -290,43 +290,7 @@ console.log('דורש תשלום?', changeRequest.data.requires_payment);
 
 ---
 
-### דוגמת קוד מלאה
-
-```
-// כשלקוח לוחץ "שדרג ל-Premium"
-async function handleUpgrade(userSubscriptionUid) {
-  try {
-    const changeRequest = await splitz.subscriptions.requestProductChange({
-      subscription_uid: userSubscriptionUid,
-      target_product_uid: 'prod_premium_123',
-      return_url: 'https://myapp.com/upgrade-success'
-    });
-
-    // בדיקה אם צריך תשלום
-    if (changeRequest.data.requires_payment) {
-      // יש תשלום נוסף - נעביר לדף אישור
-      console.log(`💳 צריך לשלם: ₪${changeRequest.data.prorated_amount}`);
-      
-      // הפנה את הלקוח לאישור התשלום
-      window.location.href = changeRequest.data.approval_url;
-      
-    } else {
-      // אין תשלום נוסף (Downgrade או זיכוי)
-      console.log('✅ אין תשלום נוסף - השינוי יתבצע');
-      
-      if (changeRequest.data.prorated_amount < 0) {
-        console.log(`🎁 זיכוי: ₪${Math.abs(changeRequest.data.prorated_amount)}`);
-      }
-      
-      // אפשר להעביר ישירות לעמוד הצלחה
-      window.location.href = 'https://myapp.com/upgrade-success?status=success';
-    }
-    
-  } catch (error) {
-    console.error('❌ שגיאה בשינוי תוכנית:', error.message);
-  }
-}
-```
+בכל המקרים המשתמש חייב לעבור לapprove_url לבצע את האישור עצמאית!
 
 ---
 
