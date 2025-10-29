@@ -111,7 +111,7 @@ const splitz = new SplitzClient({
 
   // יצירת לינק
   const options = {
-    payment_link_uid: 'pl_xxx',
+    payment_link_uid: 'xxx',
     customer_email: 'customer@example.com'
   };
 
@@ -176,7 +176,7 @@ const splitz = new SplitzClient({
 
     ```javascript
     // ❌ לא טוב (Client-side):
-    const splitz = new SplitzClient({ apiKey: 'sk_...' });
+    const splitz = new SplitzClient({ apiKey: '...' });
     
     // ✅ טוב (Backend Function):
     // הקוד רץ בשרת, לא בדפדפן
@@ -249,7 +249,7 @@ const splitz = new SplitzClient({
 ```
 תשלום חד-פעמי
 const paymentLink = await splitz.paymentLinks.generate({
-  payment_link_uid: 'pl_xxx',           // ה-Payment Link UID שיצרת
+  payment_link_uid: 'xxx',           // ה-Payment Link UID שיצרת
   customer_email: 'customer@example.com' // מייל הלקוח
 });
 
@@ -341,7 +341,7 @@ const splitz = new SplitzClient({
 
 // יצירת לינק תשלום
 const paymentLink = await splitz.paymentLinks.generate({
-  payment_link_uid: 'pl_xxx', // החלף ל-Payment Link שלך
+  payment_link_uid: 'xxx', // החלף ל-Payment Link שלך
   customer_email: 'מייל המשתמש המחובר'
 });
 
