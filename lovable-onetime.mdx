@@ -100,7 +100,7 @@ description: "מדריך מלא לחיוב לקוחות חד-פעמי - לקור
   - Payment Link UID שיצרת ([לינקים לתשלום](https://app.splitz.co.il/payment-links))
 </Info>
 
-### שלב 1: יצירת לינק תשלום חד-פעמי
+### שלב 1: יצירת לינק תשלום
 
 ```javascript
 const SplitzClient = require('splitz-payments');
@@ -126,6 +126,8 @@ const splitz = new SplitzClient({
   const orderResult = await splitz.orders.get('order_xxx');
   console.log(orderResult.order.email);
 ```
+
+לאחר המימוש בקוד, הלקוח חייב להגדיר בהגדרות הלינק לתשלום את הכתובת להפנייה לאחר תשלום מוצלח!
 
 ## Best Practices
 
