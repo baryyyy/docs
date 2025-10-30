@@ -63,8 +63,6 @@ description: "מדריך מלא לחיוב לקוחות חד-פעמי - לקור
 | **חידוש**       | מתחדש אוטומטית              | לא מתחדש                         |
 | **Success URL** | `?subscription_uid=sub_xxx` | `?order_uid=order_xxx&email=...` |
 
----
-
 ## איך זה עובד?
 
 <Steps>
@@ -88,8 +86,6 @@ description: "מדריך מלא לחיוב לקוחות חד-פעמי - לקור
   </Step>
 </Steps>
 
----
-
 ## הקוד המלא
 
 <Info>
@@ -99,6 +95,8 @@ description: "מדריך מלא לחיוב לקוחות חד-פעמי - לקור
   - API Key מהמערכת ([הגדרות](https://app.splitz.co.il/settings))
   - Payment Link UID שיצרת ([לינקים לתשלום](https://app.splitz.co.il/payment-links))
 </Info>
+
+כל הפונקציות ההתממשקות והאינטגרציה עם SPLITZ מתבצעת דרך חבילת הNPM ולא בשום פנים ואופן בצורה ישירה לAPI!
 
 ### שלב 1: יצירת לינק תשלום
 
@@ -117,56 +115,27 @@ const splitz = new SplitzClient({
 
   const result = await splitz.paymentLinks.generate(options);
   console.log(result.url);
-
-  // בדיקת תשלום
-  const isPaidResult = await splitz.orders.isPaid('order_xxx');
-  console.log(isPaidResult.paid); // boolean
-
-  // שליפת הזמנה
-  const orderResult = await splitz.orders.get('order_xxx');
-  console.log(orderResult.order.email);
 ```
 
 לאחר המימוש בקוד, הלקוח חייב להגדיר בהגדרות הלינק לתשלום את הכתובת להפנייה לאחר תשלום מוצלח!
 
-## Best Practices
+### שלב 2: בדיקה האם הזמנה שולמה לאחר התשלום:
 
-<Card title="💡 טיפים לחוויית משתמש מצוינת" icon="lightbulb">
-  ### 1. הצג מחיר ברור לפני תשלום
+```javascript
+const SplitzClient = require('splitz-payments');
 
-  לפני שהלקוח לוחץ "קנה עכשיו":
+const splitz = new SplitzClient({
+  apiKey: 'YOUR_API_KEY_HERE'
+});
 
-  ```
-  קורס Full-Stack Development
-  ₪499 (תשלום חד-פעמי)
-  ✅ גישה לכל החיים
-  ✅ 50 שיעורי וידאו
-  ✅ תעודת סיום
-  ```
+ // בדיקת תשלום
+ const isPaidResult = await splitz.orders.isPaid('order_xxx');
+ console.log(isPaidResult.paid); // boolean
 
-  ---
-
-  ### 2. תן feedback מיידי
-
-  כשהלקוח לוחץ על כפתור הרכישה:
-
-  ```javascript
-  button.disabled = true;
-  button.textContent = '⏳ מעביר לתשלום...';
-  ```
-
-  ---
-
-  ### 3. שמור היסטוריה
-
-  תאפשר ללקוח לראות את כל הרכישות שלו:
-
-  ```
-  📦 הרכישות שלי:
-  - קורס Full-Stack (10.10.2025) - ₪499
-  - eBook React (15.09.2025) - ₪99
-  ```
-</Card>
+  // שליפת הזמנה
+ const orderResult = await splitz.orders.get('order_xxx');
+ console.log(orderResult.order.email);
+```
 
 ---
 
@@ -195,50 +164,9 @@ const splitz = new SplitzClient({
     }
     ```
   </Step>
-  <Step title="✅ מנע duplicate purchases">
-    בדוק בדאטאבייס אם הלקוח כבר קנה:
-
-    ```javascript
-    const existingPurchase = await db.purchases.findOne({
-      user_id: userId,
-      product: 'course-fullstack'
-    });
-    
-    if (existingPurchase) {
-      alert('כבר רכשת את המוצר הזה!');
-      return;
-    }
-    ```
-  </Step>
-  <Step title="✅ שמור logs">
-    שמור כל תשלום בלוג:
-
-    ```javascript
-    await db.payment_logs.create({
-      order_uid: order.uid,
-      user_id: userId,
-      amount: order.price,
-      status: 'success',
-      timestamp: new Date()
-    });
-    ```
-  </Step>
-  <Step title="✅ טפל ב-race conditions">
-    אם לקוח לוחץ "קנה" פעמיים מהר:
-
-    ```javascript
-    // השתמש ב-locking mechanism
-    if (isPurchaseInProgress) {
-      alert('תשלום בתהליך...');
-      return;
-    }
-    ```
-  </Step>
 </Steps>
 
 ## סיכום
-
-אתה עכשיו מומחה בחיובים חד-פעמיים עם Splitz! 🎉
 
 **תזכורות חשובות:**
 
@@ -270,8 +198,6 @@ window.location.href = paymentUrl;
 
   אם תחשוף את ה-API Key בצד הלקוח - הכסף שלך בסכנה! 🔒
 </Warning>
-
----
 
 ### טיפול בחזרה מדף התשלום
 
