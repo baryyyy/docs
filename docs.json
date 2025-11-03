@@ -25,7 +25,7 @@
             ]
           },
           {
-            "group": "API DOCS",
+            "group": "Api Reference",
             "openapi": {
               "source": "openapi.json",
               "directory": "api-reference"
