@@ -26,10 +26,10 @@
           },
           {
             "group": "API DOCS",
-            "pages": [
-              "api-reference/introduction",
-              "api-reference/endpoint"
-            ]
+            "openapi": {
+              "source": "openapi.json",
+              "directory": "api-reference"
+            }
           }
         ]
       }

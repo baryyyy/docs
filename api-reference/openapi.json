@@ -1,217 +1,1516 @@
 {
-  "openapi": "3.1.0",
-  "info": {
-    "title": "OpenAPI Plant Store",
-    "description": "A sample API that uses a plant store as an example to demonstrate features in the OpenAPI specification",
-    "license": {
-      "name": "MIT"
-    },
-    "version": "1.0.0"
-  },
-  "servers": [
-    {
-      "url": "http://sandbox.mintlify.com"
-    }
-  ],
-  "security": [
-    {
-      "bearerAuth": []
-    }
-  ],
-  "paths": {
-    "/plants": {
-      "get": {
-        "description": "Returns all plants from the system that the user has access to",
-        "parameters": [
-          {
-            "name": "limit",
-            "in": "query",
-            "description": "The maximum number of results to return",
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Plant response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/Plant"
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Unexpected error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          }
+    "openapi": "3.0.3",
+    "info": {
+        "title": "Splitz MCP API",
+        "version": "1.0.0",
+        "description": "תיעוד OpenAPI מקצועי ומפורט עבור ממשק ה-MCP של Splitz. ממשק זה מאפשר לשותפים עסקיים לבצע פעולות על מנויים, תשלומים ומוצרים דרך API מאובטח ומתקדם.\n\n## אבטחה\nכל הבקשות מחייבות כותרת `Authorization` בפורמט Bearer המכילה את מפתח ה-API של החנות (Shop API Key). המפתח מאמת את זהות החנות ומאפשר גישה רק למשאבים השייכים לה.\n\n## פורמט תגובות\nכל התגובות מוחזרות בפורמט JSON עם שדה `success` המציין הצלחה או כישלון.\n\n## דרישות טכניות\n- Content-Type: application/json\n- Authorization: Bearer <SHOP_API_KEY>\n- Encoding: UTF-8",
+        "contact": {
+            "name": "Splitz Support",
+            "email": "support@splitz.co.il",
+            "url": "https://splitz.co.il"
+        },
+        "license": {
+            "name": "Proprietary",
+            "url": "https://splitz.co.il/terms"
         }
-      },
-      "post": {
-        "description": "Creates a new plant in the store",
-        "requestBody": {
-          "description": "Plant to add to the store",
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/NewPlant"
-              }
+    },
+    "servers": [
+        {
+            "url": "https://api.splitz.co.il",
+            "description": "השרת הראשי לשימוש בפועל - Production"
+        }
+    ],
+    "tags": [
+        {
+            "name": "MCP",
+            "description": "אינטגרציית MCP (Merchant Commerce Platform) ל-Splitz - ממשק מקיף לניהול מנויים, תשלומים ומוצרים",
+            "externalDocs": {
+                "description": "מדריך אינטגרציה מלא",
+                "url": "https://docs.splitz.co.il/mcp"
             }
-          },
-          "required": true
+        },
+        {
+            "name": "Configuration",
+            "description": "נקודות קצה לקבלת מידע תצורה על השירות"
+        },
+        {
+            "name": "Payments",
+            "description": "ניהול קישורי תשלום והזמנות"
+        },
+        {
+            "name": "Subscriptions",
+            "description": "ניהול מנויים, שינוי תוכניות ופורטל לקוחות"
+        }
+    ],
+    "security": [
+        {
+            "bearerAuth": []
+        }
+    ],
+    "paths": {
+       "/mcp/generate_payment_link": {
+            "post": {
+                "tags": [
+                    "Payments"
+                ],
+                "summary": "יצירת קישור תשלום מאובטח ללקוח",
+                "description": "יוצר קישור תשלום ייחודי ומאובטח עבור לקוח ספציפי. הקישור מקושר לאימייל הלקוח ולעמוד התשלום הספציפי, ומאפשר ללקוח לבצע תשלום בצורה מאובטחת ומעוקבת. הקישור כולל טוקן ייחודי המזהה את הלקוח ומונע גישה לא מורשית.",
+                "operationId": "generatePaymentLink",
+                "requestBody": {
+                    "required": true,
+                    "description": "פרטי הבקשה ליצירת קישור תשלום",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "payment_link_uid",
+                                    "customer_email"
+                                ],
+                                "properties": {
+                                    "payment_link_uid": {
+                                        "type": "string",
+                                        "description": "מזהה ייחודי (UID) של עמוד/קישור התשלום במערכת Splitz. ניתן לקבל מזהה זה מהפאנל או דרך ה-API של ניהול קישורי תשלום.",
+                                        "example": "pl_1234567890abcdef",
+                                        "minLength": 1,
+                                        "maxLength": 100
+                                    },
+                                    "customer_email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "description": "כתובת אימייל תקינה של הלקוח אליו יצורף הקישור. משמש למעקב, זיהוי ושליחת התראות על התשלום.",
+                                        "example": "customer@example.com",
+                                        "pattern": "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"
+                                    }
+                                }
+                            },
+                            "examples": {
+                                "basic": {
+                                    "summary": "דוגמה בסיסית",
+                                    "value": {
+                                        "payment_link_uid": "pl_1234567890abcdef",
+                                        "customer_email": "customer@example.com"
+                                    }
+                                },
+                                "subscription": {
+                                    "summary": "קישור למנוי",
+                                    "value": {
+                                        "payment_link_uid": "pl_sub_monthly_premium",
+                                        "customer_email": "john.doe@company.com"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "קישור התשלום נוצר בהצלחה",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "description": "מצב ההצלחה של הפעולה (תמיד true במקרה של תגובה 200)",
+                                            "example": true
+                                        },
+                                        "url": {
+                                            "type": "string",
+                                            "format": "uri",
+                                            "description": "כתובת URL מלאה של קישור התשלום המאובטח. הקישור כולל את ה-payment_link_uid וטוקן ייחודי ארוך מוצפן. יש לשלוח קישור זה ללקוח (דרך אימייל, SMS וכו').",
+                                            "example": "https://app.splitz.co.il/pay-link/pl_1234567890abcdef/a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "url"
+                                    ]
+                                },
+                                "examples": {
+                                    "success": {
+                                        "value": {
+                                            "success": true,
+                                            "url": "https://app.splitz.co.il/pay-link/pl_1234567890abcdef/a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/BadRequestError"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/UnauthorizedError"
+                    }
+                }
+            }
+        },
+        "/mcp/get_customer_subscription": {
+            "post": {
+                "tags": [
+                    "Subscriptions"
+                ],
+                "summary": "קבלת פרטי מנוי מלאים של לקוח",
+                "description": "מחזיר פרטים מלאים על מנוי ספציפי. ניתן לחפש לפי מזהה המנוי (subscription_uid) או לפי שילוב של אימייל לקוח ומזהה חנות. במקרה של חיפוש לפי אימייל, יוחזר המנוי האחרון שנוצר. אם קיים שינוי תוכנית מתוכנן (pending plan change), המידע על השינוי יוחזר גם כן.",
+                "operationId": "getCustomerSubscription",
+                "requestBody": {
+                    "required": true,
+                    "description": "ניתן לחפש מנוי בשתי דרכים: לפי subscription_uid או לפי customer_email + shop_uid",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "oneOf": [
+                                    {
+                                        "type": "object",
+                                        "description": "חיפוש לפי מזהה מנוי ישיר",
+                                        "required": [
+                                            "subscription_uid"
+                                        ],
+                                        "properties": {
+                                            "subscription_uid": {
+                                                "type": "string",
+                                                "description": "מזהה ייחודי (UID) של המנוי במערכת Splitz",
+                                                "example": "sub_1234567890abcdef",
+                                                "minLength": 1
+                                            }
+                                        }
+                                    },
+                                    {
+                                        "type": "object",
+                                        "description": "חיפוש לפי אימייל לקוח ומזהה חנות (יחזיר את המנוי האחרון)",
+                                        "required": [
+                                            "customer_email",
+                                            "shop_uid"
+                                        ],
+                                        "properties": {
+                                            "customer_email": {
+                                                "type": "string",
+                                                "format": "email",
+                                                "description": "כתובת האימייל של בעל המנוי",
+                                                "example": "customer@example.com"
+                                            },
+                                            "shop_uid": {
+                                                "type": "string",
+                                                "description": "מזהה ייחודי של החנות. חייב להתאים למזהה החנות המשויך למפתח ה-API בכותרת Authorization.",
+                                                "example": "shop_abcdef123456"
+                                            }
+                                        }
+                                    }
+                                ]
+                            },
+                            "examples": {
+                                "bySubscriptionUid": {
+                                    "summary": "חיפוש לפי subscription_uid",
+                                    "description": "השיטה המומלצת כאשר ידוע מזהה המנוי",
+                                    "value": {
+                                        "subscription_uid": "sub_1234567890abcdef"
+                                    }
+                                },
+                                "byEmailAndShop": {
+                                    "summary": "חיפוש לפי customer_email ו-shop_uid",
+                                    "description": "שימושי כאשר אין מזהה מנוי אך ידוע האימייל של הלקוח",
+                                    "value": {
+                                        "customer_email": "customer@example.com",
+                                        "shop_uid": "shop_abcdef123456"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "פרטי המנוי הוחזרו בהצלחה",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "description": "מצב ההצלחה של הפעולה",
+                                            "example": true
+                                        },
+                                        "subscription": {
+                                            "$ref": "#/components/schemas/Subscription"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "subscription"
+                                    ]
+                                },
+                                "examples": {
+                                    "activeSubscription": {
+                                        "summary": "מנוי פעיל",
+                                        "value": {
+                                            "success": true,
+                                            "subscription": {
+                                                "uid": "sub_1234567890abcdef",
+                                                "status": "active",
+                                                "subscriber_email": "customer@example.com",
+                                                "subscriber_name": "יוחנן כהן",
+                                                "order_uid": "ord_abcdef123456",
+                                                "product_uid": "prod_premium_monthly"
+                                            }
+                                        }
+                                    },
+                                    "withPendingChange": {
+                                        "summary": "מנוי עם שינוי תוכנית מתוכנן",
+                                        "value": {
+                                            "success": true,
+                                            "subscription": {
+                                                "uid": "sub_1234567890abcdef",
+                                                "status": "active",
+                                                "subscriber_email": "customer@example.com",
+                                                "subscriber_name": "יוחנן כהן",
+                                                "order_uid": "ord_abcdef123456",
+                                                "product_uid": "prod_basic_monthly",
+                                                "pending_plan_change": {
+                                                    "current_product_uid": "prod_basic_monthly",
+                                                    "future_product_uid": "prod_premium_monthly",
+                                                    "future_product_name": "תוכנית פרימיום חודשית",
+                                                    "effective_date": "2025-12-01T00:00:00.000Z",
+                                                    "status": "scheduled"
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "בקשה שגויה - שדות חסרים או מנוי לא נמצא",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                },
+                                "examples": {
+                                    "missingFields": {
+                                        "summary": "שדות חסרים",
+                                        "value": {
+                                            "success": false,
+                                            "message": "יש לספק subscription_uid או customer_email & shop_uid"
+                                        }
+                                    },
+                                    "notFound": {
+                                        "summary": "מנוי לא נמצא",
+                                        "value": {
+                                            "success": false,
+                                            "message": "מנוי לא נמצא"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/UnauthorizedError"
+                    },
+                    "403": {
+                        "description": "אין הרשאה לגשת למנוי זה",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                },
+                                "examples": {
+                                    "shopMismatch": {
+                                        "summary": "shop_uid לא תואם",
+                                        "value": {
+                                            "success": false,
+                                            "message": "shop_uid לא תואם לחנות המאומתת"
+                                        }
+                                    },
+                                    "notOwned": {
+                                        "summary": "המנוי לא שייך לחנות",
+                                        "value": {
+                                            "success": false,
+                                            "message": "מנוי לא שייך לחנות הנוכחית"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    }
+                }
+            }
+        },
+        "/mcp/generate_customer_portal_link": {
+            "post": {
+                "tags": [
+                    "Subscriptions"
+                ],
+                "summary": "יצירת קישור לפורטל ניהול מנוי ללקוח",
+                "description": "יוצר קישור מאובטח וייחודי לפורטל ניהול המנוי (Customer Portal) עבור מנוי ספציפי. הקישור מאפשר ללקוח לנהל את המנוי שלו: ביטול, שינוי אמצעי תשלום, עדכון פרטים אישיים ועוד. הקישור תקף ל-24 שעות מרגע היצירה.",
+                "operationId": "generateCustomerPortalLink",
+                "requestBody": {
+                    "required": true,
+                    "description": "מזהה המנוי עבורו יש ליצור קישור ניהול",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "subscription_uid"
+                                ],
+                                "properties": {
+                                    "subscription_uid": {
+                                        "type": "string",
+                                        "description": "מזהה ייחודי (UID) של המנוי במערכת",
+                                        "example": "sub_1234567890abcdef",
+                                        "minLength": 1
+                                    }
+                                }
+                            },
+                            "examples": {
+                                "basic": {
+                                    "summary": "בקשה סטנדרטית",
+                                    "value": {
+                                        "subscription_uid": "sub_1234567890abcdef"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "קישור הניהול נוצר בהצלחה",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "description": "מצב ההצלחה של הפעולה",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "description": "פרטי קישור הניהול שנוצר",
+                                            "properties": {
+                                                "management_url": {
+                                                    "type": "string",
+                                                    "format": "uri",
+                                                    "description": "כתובת URL מלאה של פורטל הניהול. יש לשלוח קישור זה ללקוח דרך אימייל או SMS.",
+                                                    "example": "https://app.splitz.co.il/subscription-portal/a1b2c3d4e5f6token"
+                                                },
+                                                "token": {
+                                                    "type": "string",
+                                                    "description": "הטוקן המאובטח המשמש לאימות הגישה לפורטל. משמש גם בתוך ה-URL.",
+                                                    "example": "a1b2c3d4e5f6token"
+                                                },
+                                                "expires_at": {
+                                                    "type": "string",
+                                                    "format": "date-time",
+                                                    "description": "תאריך ושעה מדויקים של תפוגת הטוקן (ISO 8601 format). לאחר מועד זה הקישור לא יהיה תקף.",
+                                                    "example": "2025-11-04T12:00:00.000Z"
+                                                },
+                                                "expires_in_hours": {
+                                                    "type": "integer",
+                                                    "description": "מספר השעות עד לתפוגת הקישור (בדרך כלל 24)",
+                                                    "example": 24,
+                                                    "minimum": 1
+                                                }
+                                            },
+                                            "required": [
+                                                "management_url",
+                                                "token",
+                                                "expires_at",
+                                                "expires_in_hours"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "data"
+                                    ]
+                                },
+                                "examples": {
+                                    "success": {
+                                        "value": {
+                                            "success": true,
+                                            "data": {
+                                                "management_url": "https://app.splitz.co.il/subscription-portal/a1b2c3d4e5f6token",
+                                                "token": "a1b2c3d4e5f6token",
+                                                "expires_at": "2025-11-04T12:00:00.000Z",
+                                                "expires_in_hours": 24
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "בקשה שגויה - subscription_uid חסר/לא תקין או מנוי לא נמצא",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                },
+                                "examples": {
+                                    "missingUid": {
+                                        "summary": "חסר subscription_uid",
+                                        "value": {
+                                            "success": false,
+                                            "error": "subscription_uid חסר או לא תקין"
+                                        }
+                                    },
+                                    "notFound": {
+                                        "summary": "מנוי לא נמצא",
+                                        "value": {
+                                            "success": false,
+                                            "error": "מנוי לא נמצא"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/UnauthorizedError"
+                    },
+                    "403": {
+                        "description": "המנוי לא שייך לחנות הנוכחית",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                },
+                                "example": {
+                                    "success": false,
+                                    "error": "המנוי לא שייך לחנות הנוכחית"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "שגיאת שרת ביצירת קישור הניהול",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                },
+                                "example": {
+                                    "success": false,
+                                    "error": "שגיאה ביצירת קישור ניהול",
+                                    "details": "Internal server error details"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/mcp/change_subscription": {
+            "post": {
+                "tags": [
+                    "Subscriptions"
+                ],
+                "summary": "יצירת בקשה לשינוי תוכנית מנוי",
+                "description": "יוצר בקשה מלאה לשינוי תוכנית מנוי קיימת לתוכנית אחרת (Upgrade או Downgrade). התהליך כולל חישוב יחסי (prorated) של ההפרש במחיר, יצירת בקשת שינוי במערכת, והחזרת קישור לעמוד אישור ללקוח. המערכת מטפלת אוטומטית בכל התרחישים: שדרוג עם תשלום יחסי, הורדה עם זיכוי, ותקופות ניסיון.",
+                "operationId": "changeSubscription",
+                "requestBody": {
+                    "required": true,
+                    "description": "פרטי בקשת שינוי התוכנית",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "subscription_uid",
+                                    "target_product_uid",
+                                    "return_url"
+                                ],
+                                "properties": {
+                                    "subscription_uid": {
+                                        "type": "string",
+                                        "description": "מזהה ייחודי של המנוי שברצונך לשנות",
+                                        "example": "sub_1234567890abcdef",
+                                        "minLength": 1
+                                    },
+                                    "target_product_uid": {
+                                        "type": "string",
+                                        "description": "מזהה ייחודי של המוצר/תוכנית החדשה אליה רוצים לעבור. המוצר חייב להיות שייך לאותה חנות ולהיות שונה מהמוצר הנוכחי.",
+                                        "example": "prod_premium_monthly",
+                                        "minLength": 1
+                                    },
+                                    "return_url": {
+                                        "type": "string",
+                                        "format": "uri",
+                                        "description": "כתובת URL מלאה אליה הלקוח יופנה לאחר השלמת תהליך השינוי (הצלחה או ביטול). חייבת להיות URL תקינה.",
+                                        "example": "https://example.com/subscription-updated",
+                                        "pattern": "^https?://.+"
+                                    }
+                                }
+                            },
+                            "examples": {
+                                "upgrade": {
+                                    "summary": "שדרוג לתוכנית גבוהה יותר",
+                                    "value": {
+                                        "subscription_uid": "sub_1234567890abcdef",
+                                        "target_product_uid": "prod_premium_monthly",
+                                        "return_url": "https://example.com/subscription-upgraded"
+                                    }
+                                },
+                                "downgrade": {
+                                    "summary": "מעבר לתוכנית נמוכה יותר",
+                                    "value": {
+                                        "subscription_uid": "sub_1234567890abcdef",
+                                        "target_product_uid": "prod_basic_monthly",
+                                        "return_url": "https://example.com/subscription-downgraded"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "בקשת השינוי נוצרה בהצלחה",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "description": "מצב ההצלחה של הפעולה",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "description": "פרטי בקשת השינוי שנוצרה",
+                                            "properties": {
+                                                "request_uid": {
+                                                    "type": "string",
+                                                    "description": "מזהה ייחודי של בקשת השינוי. שמור מזהה זה למעקב אחר הבקשה.",
+                                                    "example": "pcr_abcdef1234567890"
+                                                },
+                                                "approval_url": {
+                                                    "type": "string",
+                                                    "format": "uri",
+                                                    "description": "קישור לעמוד אישור השינוי. יש לשלוח קישור זה ללקוח כדי שיוכל לאשר ולהשלים את השינוי.",
+                                                    "example": "https://app.splitz.co.il/change-plan-approval/pcr_abcdef1234567890/token123"
+                                                },
+                                                "expires_at": {
+                                                    "type": "string",
+                                                    "format": "date-time",
+                                                    "description": "תאריך ושעת תפוגת הבקשה. לאחר מועד זה הקישור לא יהיה תקף (24 שעות מרגע היצירה).",
+                                                    "example": "2025-11-04T12:00:00.000Z"
+                                                },
+                                                "requires_payment": {
+                                                    "type": "boolean",
+                                                    "description": "האם השינוי דורש תשלום נוסף מהלקוח (true בשדרוג, false בדרך כלל בהורדה)",
+                                                    "example": true
+                                                },
+                                                "prorated_amount": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "description": "הסכום היחסי (prorated) שיש לחייב או לזכות. מספר חיובי = תשלום נדרש, 0 = אין תשלום נוסף, שלילי = זיכוי.",
+                                                    "example": 15.50,
+                                                    "minimum": 0
+                                                },
+                                                "current_product": {
+                                                    "type": "object",
+                                                    "description": "פרטי המוצר/תוכנית הנוכחית",
+                                                    "properties": {
+                                                        "name": {
+                                                            "type": "string",
+                                                            "description": "שם התוכנית הנוכחית",
+                                                            "example": "תוכנית בסיסית חודשית"
+                                                        },
+                                                        "price": {
+                                                            "type": "number",
+                                                            "format": "float",
+                                                            "description": "מחיר התוכנית הנוכחית",
+                                                            "example": 29.90
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "name",
+                                                        "price"
+                                                    ]
+                                                },
+                                                "target_product": {
+                                                    "type": "object",
+                                                    "description": "פרטי המוצר/תוכנית החדשה",
+                                                    "properties": {
+                                                        "name": {
+                                                            "type": "string",
+                                                            "description": "שם התוכנית החדשה",
+                                                            "example": "תוכנית פרימיום חודשית"
+                                                        },
+                                                        "price": {
+                                                            "type": "number",
+                                                            "format": "float",
+                                                            "description": "מחיר התוכנית החדשה",
+                                                            "example": 59.90
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "name",
+                                                        "price"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "request_uid",
+                                                "approval_url",
+                                                "expires_at",
+                                                "requires_payment",
+                                                "prorated_amount",
+                                                "current_product",
+                                                "target_product"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "data"
+                                    ]
+                                },
+                                "examples": {
+                                    "upgradeWithPayment": {
+                                        "summary": "שדרוג הדורש תשלום יחסי",
+                                        "value": {
+                                            "success": true,
+                                            "data": {
+                                                "request_uid": "pcr_abcdef1234567890",
+                                                "approval_url": "https://app.splitz.co.il/change-plan-approval/pcr_abcdef1234567890/token123",
+                                                "expires_at": "2025-11-04T12:00:00.000Z",
+                                                "requires_payment": true,
+                                                "prorated_amount": 15.50,
+                                                "current_product": {
+                                                    "name": "תוכנית בסיסית חודשית",
+                                                    "price": 29.90
+                                                },
+                                                "target_product": {
+                                                    "name": "תוכנית פרימיום חודשית",
+                                                    "price": 59.90
+                                                }
+                                            }
+                                        }
+                                    },
+                                    "downgrade": {
+                                        "summary": "הורדה ללא תשלום נוסף",
+                                        "value": {
+                                            "success": true,
+                                            "data": {
+                                                "request_uid": "pcr_xyz9876543210",
+                                                "approval_url": "https://app.splitz.co.il/change-plan-approval/pcr_xyz9876543210/token456",
+                                                "expires_at": "2025-11-04T12:00:00.000Z",
+                                                "requires_payment": false,
+                                                "prorated_amount": 0,
+                                                "current_product": {
+                                                    "name": "תוכנית פרימיום חודשית",
+                                                    "price": 59.90
+                                                },
+                                                "target_product": {
+                                                    "name": "תוכנית בסיסית חודשית",
+                                                    "price": 29.90
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "בקשה שגויה - שדות חסרים, ערכים לא תקינים או תוכנית זהה",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                },
+                                "examples": {
+                                    "missingFields": {
+                                        "summary": "שדות חסרים",
+                                        "value": {
+                                            "success": false,
+                                            "message": "subscription_uid, target_product_uid ו-return_url נדרשים"
+                                        }
+                                    },
+                                    "invalidUrl": {
+                                        "summary": "return_url לא תקין",
+                                        "value": {
+                                            "success": false,
+                                            "message": "return_url לא תקין - חייב להיות URL מלא"
+                                        }
+                                    },
+                                    "sameProduct": {
+                                        "summary": "ניסיון לעבור לאותה תוכנית",
+                                        "value": {
+                                            "success": false,
+                                            "message": "המוצר היעד זהה למוצר הנוכחי"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/UnauthorizedError"
+                    },
+                    "403": {
+                        "description": "אין הרשאה - המנוי או המוצר לא שייכים לחנות",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                },
+                                "examples": {
+                                    "subscriptionNotOwned": {
+                                        "summary": "המנוי לא שייך לחנות",
+                                        "value": {
+                                            "success": false,
+                                            "message": "המנוי לא שייך לחנות הנוכחית"
+                                        }
+                                    },
+                                    "productNotOwned": {
+                                        "summary": "המוצר היעד לא שייך לחנות",
+                                        "value": {
+                                            "success": false,
+                                            "message": "המוצר היעד לא שייך לחנות הנוכחית"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "משאב לא נמצא - מנוי או מוצר לא קיימים",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                },
+                                "examples": {
+                                    "subscriptionNotFound": {
+                                        "summary": "מנוי לא נמצא",
+                                        "value": {
+                                            "success": false,
+                                            "message": "מנוי לא נמצא"
+                                        }
+                                    },
+                                    "productNotFound": {
+                                        "summary": "מוצר לא נמצא",
+                                        "value": {
+                                            "success": false,
+                                            "message": "מוצר לא נמצא"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "שגיאת שרת ביצירת בקשת השינוי",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                },
+                                "example": {
+                                    "success": false,
+                                    "message": "שגיאה ביצירת בקשת שינוי חבילה",
+                                    "details": "PayPal API error"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/mcp/isOrderPaid": {
+            "post": {
+                "tags": [
+                    "Payments"
+                ],
+                "summary": "בדיקת סטטוס תשלום הזמנה",
+                "description": "בודק האם הזמנה ספציפית שולמה (status = 'paid'). שימושי לאימות תשלומים ולוגיקת המשך תהליכים לאחר תשלום.",
+                "operationId": "isOrderPaid",
+                "requestBody": {
+                    "required": true,
+                    "description": "מזהה ההזמנה לבדיקה",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "order_uid"
+                                ],
+                                "properties": {
+                                    "order_uid": {
+                                        "type": "string",
+                                        "description": "מזהה ייחודי (UID) של ההזמנה במערכת",
+                                        "example": "ord_1234567890abcdef",
+                                        "minLength": 1
+                                    }
+                                }
+                            },
+                            "examples": {
+                                "basic": {
+                                    "summary": "בדיקה סטנדרטית",
+                                    "value": {
+                                        "order_uid": "ord_1234567890abcdef"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "הבדיקה הושלמה בהצלחה",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "description": "מצב ההצלחה של הפעולה",
+                                            "example": true
+                                        },
+                                        "paid": {
+                                            "type": "boolean",
+                                            "description": "האם ההזמנה שולמה (true = שולם, false = לא שולם)",
+                                            "example": true
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "paid"
+                                    ]
+                                },
+                                "examples": {
+                                    "paid": {
+                                        "summary": "הזמנה ששולמה",
+                                        "value": {
+                                            "success": true,
+                                            "paid": true
+                                        }
+                                    },
+                                    "unpaid": {
+                                        "summary": "הזמנה שטרם שולמה",
+                                        "value": {
+                                            "success": true,
+                                            "paid": false
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "order_uid חסר או לא תקין",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                },
+                                "example": {
+                                    "success": false,
+                                    "message": "order_uid חסר או לא תקין"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/UnauthorizedError"
+                    },
+                    "403": {
+                        "description": "ההזמנה לא שייכת לחנות הנוכחית",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                },
+                                "example": {
+                                    "success": false,
+                                    "message": "ההזמנה לא שייכת לחנות הנוכחית"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "הזמנה לא נמצאה",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                },
+                                "example": {
+                                    "success": false,
+                                    "message": "הזמנה לא נמצאה"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    }
+                }
+            }
+        },
+        "/mcp/getOrder": {
+            "post": {
+                "tags": [
+                    "Payments"
+                ],
+                "summary": "קבלת פרטי הזמנה מלאים",
+                "description": "מחזיר את כל פרטי ההזמנה כולל מידע על התשלום, הלקוח, המוצר, תאריכים, מזהי PayPal ופרטי המשלם. שימושי להצגת פרטים מלאים על הזמנה או ליצירת חשבוניות.",
+                "operationId": "getOrder",
+                "requestBody": {
+                    "required": true,
+                    "description": "מזהה ההזמנה לשליפה",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "order_uid"
+                                ],
+                                "properties": {
+                                    "order_uid": {
+                                        "type": "string",
+                                        "description": "מזהה ייחודי (UID) של ההזמנה במערכת",
+                                        "example": "ord_1234567890abcdef",
+                                        "minLength": 1
+                                    }
+                                }
+                            },
+                            "examples": {
+                                "basic": {
+                                    "summary": "שליפה סטנדרטית",
+                                    "value": {
+                                        "order_uid": "ord_1234567890abcdef"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "פרטי ההזמנה הוחזרו בהצלחה",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "description": "מצב ההצלחה של הפעולה",
+                                            "example": true
+                                        },
+                                        "order": {
+                                            "$ref": "#/components/schemas/Order"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "order"
+                                    ]
+                                },
+                                "examples": {
+                                    "paidOrder": {
+                                        "summary": "הזמנה ששולמה",
+                                        "value": {
+                                            "success": true,
+                                            "order": {
+                                                "uid": "ord_1234567890abcdef",
+                                                "email": "customer@example.com",
+                                                "paid_at": "2025-11-03T10:30:00.000Z",
+                                                "is_paid": true,
+                                                "price": 59.90,
+                                                "currency": "ILS",
+                                                "type": "subscription",
+                                                "status": "paid",
+                                                "product_uid": "prod_premium_monthly",
+                                                "shop_uid": "shop_abcdef123456",
+                                                "createdAt": "2025-11-03T10:25:00.000Z",
+                                                "paypal_order_id": "ORDER123456",
+                                                "paypal_transaction_id": "TXN789012",
+                                                "payer": {
+                                                    "email_address": "customer@example.com",
+                                                    "name": {
+                                                        "given_name": "יוחנן",
+                                                        "surname": "כהן"
+                                                    },
+                                                    "payer_id": "PAYERID123"
+                                                }
+                                            }
+                                        }
+                                    },
+                                    "pendingOrder": {
+                                        "summary": "הזמנה ממתינה לתשלום",
+                                        "value": {
+                                            "success": true,
+                                            "order": {
+                                                "uid": "ord_9876543210fedcba",
+                                                "email": "customer2@example.com",
+                                                "paid_at": null,
+                                                "is_paid": false,
+                                                "price": 29.90,
+                                                "currency": "ILS",
+                                                "type": "one_time",
+                                                "status": "pending",
+                                                "product_uid": "prod_basic_onetime",
+                                                "shop_uid": "shop_abcdef123456",
+                                                "createdAt": "2025-11-03T11:00:00.000Z",
+                                                "paypal_order_id": null,
+                                                "paypal_transaction_id": null,
+                                                "payer": null
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "order_uid חסר או לא תקין",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                },
+                                "example": {
+                                    "success": false,
+                                    "message": "order_uid חסר או לא תקין"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/UnauthorizedError"
+                    },
+                    "403": {
+                        "description": "ההזמנה לא שייכת לחנות הנוכחית",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                },
+                                "example": {
+                                    "success": false,
+                                    "message": "ההזמנה לא שייכת לחנות הנוכחית"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "הזמנה לא נמצאה",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                },
+                                "example": {
+                                    "success": false,
+                                    "message": "הזמנה לא נמצאה"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "securitySchemes": {
+            "bearerAuth": {
+                "type": "http",
+                "scheme": "bearer",
+                "bearerFormat": "API Key",
+                "description": "אימות באמצעות Bearer Token. יש לשלוח כותרת `Authorization` עם הערך `Bearer <SHOP_API_KEY>`.\n\nדוגמה:\n```\nAuthorization: Bearer sk_live_1234567890abcdef\n```\n\nהמפתח הוא מפתח ה-API של החנות (Shop Model: api_key) שניתן למצוא בפאנל הניהול של Splitz."
+            }
+        },
+        "schemas": {
+            "ErrorResponse": {
+                "type": "object",
+                "description": "מבנה תגובת שגיאה סטנדרטי",
+                "properties": {
+                    "success": {
+                        "type": "boolean",
+                        "description": "מצב ההצלחה של הפעולה (תמיד false במקרה של שגיאה)",
+                        "example": false
+                    },
+                    "message": {
+                        "type": "string",
+                        "description": "הודעת שגיאה ברורה בעברית המתארת את הבעיה",
+                        "example": "Unauthorized"
+                    },
+                    "error": {
+                        "type": "string",
+                        "description": "פרטי שגיאה נוספים (אופציונלי)",
+                        "example": "Invalid token"
+                    },
+                    "details": {
+                        "type": "string",
+                        "description": "מידע טכני נוסף על השגיאה (אופציונלי, בדרך כלל רק בסביבת פיתוח)",
+                        "example": "MongoDB connection timeout"
+                    }
+                },
+                "required": [
+                    "success"
+                ],
+                "additionalProperties": true
+            },
+            "Subscription": {
+                "type": "object",
+                "description": "אובייקט מנוי מלא עם כל הפרטים הרלוונטיים",
+                "properties": {
+                    "uid": {
+                        "type": "string",
+                        "description": "מזהה ייחודי של המנוי במערכת Splitz",
+                        "example": "sub_1234567890abcdef"
+                    },
+                    "status": {
+                        "$ref": "#/components/schemas/SubscriptionStatus"
+                    },
+                    "subscriber_email": {
+                        "type": "string",
+                        "format": "email",
+                        "description": "כתובת אימייל של בעל המנוי",
+                        "example": "customer@example.com"
+                    },
+                    "subscriber_name": {
+                        "type": "string",
+                        "description": "שם מלא של בעל המנוי",
+                        "example": "יוחנן כהן"
+                    },
+                    "order_uid": {
+                        "type": "string",
+                        "description": "מזהה ההזמנה הראשונית שיצרה את המנוי",
+                        "example": "ord_abcdef123456"
+                    },
+                    "product_uid": {
+                        "type": "string",
+                        "description": "מזהה המוצר/תוכנית הנוכחית של המנוי",
+                        "example": "prod_premium_monthly"
+                    },
+                    "pending_plan_change": {
+                        "type": "object",
+                        "description": "מידע על שינוי תוכנית מתוכנן (אם קיים). אם לא קיים שינוי מתוכנן, שדה זה לא יופיע בתגובה.",
+                        "nullable": true,
+                        "properties": {
+                            "current_product_uid": {
+                                "type": "string",
+                                "description": "מזהה התוכנית הנוכחית",
+                                "example": "prod_basic_monthly"
+                            },
+                            "future_product_uid": {
+                                "type": "string",
+                                "description": "מזהה התוכנית שתיכנס לתוקף",
+                                "example": "prod_premium_monthly"
+                            },
+                            "future_product_name": {
+                                "type": "string",
+                                "description": "שם התוכנית העתידית",
+                                "example": "תוכנית פרימיום חודשית"
+                            },
+                            "effective_date": {
+                                "type": "string",
+                                "format": "date-time",
+                                "description": "תאריך ושעה שבהם השינוי ייכנס לתוקף (בדרך כלל בחיוב הבא)",
+                                "example": "2025-12-01T00:00:00.000Z"
+                            },
+                            "status": {
+                                "type": "string",
+                                "description": "סטטוס השינוי המתוכנן",
+                                "enum": [
+                                    "scheduled",
+                                    "processing",
+                                    "completed",
+                                    "failed"
+                                ],
+                                "example": "scheduled"
+                            }
+                        },
+                        "required": [
+                            "current_product_uid",
+                            "future_product_uid",
+                            "future_product_name",
+                            "effective_date",
+                            "status"
+                        ]
+                    }
+                },
+                "required": [
+                    "uid",
+                    "status",
+                    "subscriber_email",
+                    "subscriber_name",
+                    "order_uid",
+                    "product_uid"
+                ]
+            },
+            "SubscriptionStatus": {
+                "type": "string",
+                "description": "סטטוסים אפשריים למנוי:\n\n- **active**: המנוי פעיל והחיובים מתבצעים כרגיל. זה הסטטוס הרצוי.\n- **pending**: המנוי נוצר אך טרם הופעל/מאושר (עדיין לא פעיל). בדרך כלל סטטוס זמני.\n- **payment_failed**: התשלום האחרון נכשל והמנוי דורש פעולה (למשל עדכון אמצעי תשלום).\n- **suspended**: המנוי מושעה זמנית ואינו פעיל (לרוב עקב בעיות תשלום או הגבלה מנהלית).\n- **cancelled**: המנוי בוטל על ידי הלקוח או הסוחר ולא יחויב עוד.\n- **expired**: תקופת המנוי הסתיימה/פגה ואין חידוש אוטומטי פעיל.",
+                "enum": [
+                    "active",
+                    "cancelled",
+                    "suspended",
+                    "expired",
+                    "pending",
+                    "payment_failed"
+                ],
+                "example": "active"
+            },
+            "Order": {
+                "type": "object",
+                "description": "אובייקט הזמנה מלא עם כל הפרטים",
+                "properties": {
+                    "uid": {
+                        "type": "string",
+                        "description": "מזהה ייחודי של ההזמנה",
+                        "example": "ord_1234567890abcdef"
+                    },
+                    "email": {
+                        "type": "string",
+                        "format": "email",
+                        "nullable": true,
+                        "description": "אימייל הלקוח שביצע את ההזמנה (אם קיים)",
+                        "example": "customer@example.com"
+                    },
+                    "paid_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true,
+                        "description": "תאריך ושעה של התשלום (null אם טרם שולם)",
+                        "example": "2025-11-03T10:30:00.000Z"
+                    },
+                    "is_paid": {
+                        "type": "boolean",
+                        "description": "האם ההזמנה שולמה",
+                        "example": true
+                    },
+                    "price": {
+                        "type": "number",
+                        "format": "float",
+                        "description": "מחיר ההזמנה",
+                        "example": 59.90,
+                        "minimum": 0
+                    },
+                    "currency": {
+                        "type": "string",
+                        "description": "מטבע התשלום (ISO 4217)",
+                        "example": "ILS",
+                        "enum": [
+                            "ILS",
+                            "USD",
+                            "EUR"
+                        ],
+                        "maxLength": 3
+                    },
+                    "type": {
+                        "type": "string",
+                        "description": "סוג ההזמנה",
+                        "enum": [
+                            "subscription",
+                            "one_time"
+                        ],
+                        "example": "subscription"
+                    },
+                    "status": {
+                        "type": "string",
+                        "description": "סטטוס ההזמנה",
+                        "enum": [
+                            "pending",
+                            "paid",
+                            "failed",
+                            "cancelled",
+                            "refunded"
+                        ],
+                        "example": "paid"
+                    },
+                    "product_uid": {
+                        "type": "string",
+                        "description": "מזהה המוצר שנרכש",
+                        "example": "prod_premium_monthly"
+                    },
+                    "shop_uid": {
+                        "type": "string",
+                        "description": "מזהה החנות שאליה שייכת ההזמנה",
+                        "example": "shop_abcdef123456"
+                    },
+                    "createdAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "description": "תאריך ושעת יצירת ההזמנה במערכת",
+                        "example": "2025-11-03T10:25:00.000Z"
+                    },
+                    "paypal_order_id": {
+                        "type": "string",
+                        "nullable": true,
+                        "description": "מזהה ההזמנה ב-PayPal (null אם טרם שולם)",
+                        "example": "ORDER123456"
+                    },
+                    "paypal_transaction_id": {
+                        "type": "string",
+                        "nullable": true,
+                        "description": "מזהה הטרנזקציה ב-PayPal (null אם טרם שולם)",
+                        "example": "TXN789012"
+                    },
+                    "payer": {
+                        "type": "object",
+                        "nullable": true,
+                        "description": "פרטי המשלם מ-PayPal (null אם טרם שולם)",
+                        "properties": {
+                            "email_address": {
+                                "type": "string",
+                                "format": "email",
+                                "description": "כתובת אימייל של המשלם ב-PayPal",
+                                "example": "customer@example.com"
+                            },
+                            "name": {
+                                "type": "object",
+                                "description": "שם המשלם",
+                                "properties": {
+                                    "given_name": {
+                                        "type": "string",
+                                        "description": "שם פרטי",
+                                        "example": "יוחנן"
+                                    },
+                                    "surname": {
+                                        "type": "string",
+                                        "description": "שם משפחה",
+                                        "example": "כהן"
+                                    }
+                                }
+                            },
+                            "payer_id": {
+                                "type": "string",
+                                "description": "מזהה המשלם ב-PayPal",
+                                "example": "PAYERID123"
+                            }
+                        }
+                    }
+                },
+                "required": [
+                    "uid",
+                    "is_paid",
+                    "price",
+                    "currency",
+                    "type",
+                    "status",
+                    "product_uid",
+                    "shop_uid",
+                    "createdAt"
+                ]
+            }
         },
         "responses": {
-          "200": {
-            "description": "plant response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Plant"
+            "UnauthorizedError": {
+                "description": "אימות נכשל - מפתח API חסר, שגוי או לא תקף",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/ErrorResponse"
+                        },
+                        "examples": {
+                            "missingAuth": {
+                                "summary": "חסרה כותרת Authorization",
+                                "value": {
+                                    "success": false,
+                                    "message": "Unauthorized"
+                                }
+                            },
+                            "invalidToken": {
+                                "summary": "מפתח API לא תקף",
+                                "value": {
+                                    "success": false,
+                                    "message": "Unauthorized"
+                                }
+                            }
+                        }
+                    }
                 }
-              }
-            }
-          },
-          "400": {
-            "description": "unexpected error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
+            },
+            "BadRequestError": {
+                "description": "בקשה שגויה - פרמטרים חסרים או לא תקינים",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/ErrorResponse"
+                        },
+                        "example": {
+                            "success": false,
+                            "message": "payment_link_uid ו-customer_email חסרים"
+                        }
+                    }
                 }
-              }
+            },
+            "InternalServerError": {
+                "description": "שגיאת שרת פנימית - בעיה בעיבוד הבקשה",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/ErrorResponse"
+                        },
+                        "example": {
+                            "success": false,
+                            "message": "שגיאה בקבלת מנוי",
+                            "details": "Database connection error"
+                        }
+                    }
+                }
             }
-          }
         }
-      }
     },
-    "/plants/{id}": {
-      "delete": {
-        "description": "Deletes a single plant based on the ID supplied",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "description": "ID of plant to delete",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int64"
-            }
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "Plant deleted",
-            "content": {}
-          },
-          "400": {
-            "description": "unexpected error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
+    "x-documentation": {
+        "getting_started": {
+            "title": "מדריך התחלה מהירה",
+            "steps": [
+                {
+                    "step": 1,
+                    "title": "קבלת מפתח API",
+                    "description": "התחבר לפאנל הניהול של Splitz והעתק את מפתח ה-API של החנות שלך מתפריט ההגדרות."
+                },
+                {
+                    "step": 2,
+                    "title": "הוספת כותרת אימות",
+                    "description": "בכל בקשה, הוסף כותרת: `Authorization: Bearer YOUR_API_KEY`"
+                },
+                {
+                    "step": 3,
+                    "title": "ביצוע בקשה ראשונה",
+                    "description": "נסה לבצע GET ל-/mcp/config.json כדי לאמת שהאימות עובד."
                 }
-              }
-            }
-          }
-        }
-      }
-    }
-  },
-  "webhooks": {
-    "/plant/webhook": {
-      "post": {
-        "description": "Information about a new plant added to the store",
-        "requestBody": {
-          "description": "Plant added to the store",
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/NewPlant"
-              }
-            }
-          }
+            ]
         },
-        "responses": {
-          "200": {
-            "description": "Return a 200 status to indicate that the data was received successfully"
-          }
+        "best_practices": {
+            "title": "שיטות עבודה מומלצות",
+            "practices": [
+                "שמור את מפתח ה-API במקום מאובטח (משתני סביבה, Vault וכו')",
+                "לעולם אל תחשוף את מפתח ה-API בקוד צד לקוח (JavaScript בדפדפן)",
+                "השתמש ב-HTTPS תמיד בסביבת ייצור",
+                "טפל בשגיאות בצורה מתאימה ובדוק את שדה success בכל תגובה",
+                "שמור לוגים של בקשות חשובות למעקב ואבחון בעיות",
+                "בדוק את תקפות הקישורים (expires_at) לפני שליחה ללקוחות"
+            ]
+        },
+        "rate_limits": {
+            "description": "המערכת מוגבלת ב-100 בקשות לדקה לכל מפתח API. בחריגה תתקבל תגובה 429 Too Many Requests."
         }
-      }
     }
-  },
-  "components": {
-    "schemas": {
-      "Plant": {
-        "required": [
-          "name"
-        ],
-        "type": "object",
-        "properties": {
-          "name": {
-            "description": "The name of the plant",
-            "type": "string"
-          },
-          "tag": {
-            "description": "Tag to specify the type",
-            "type": "string"
-          }
-        }
-      },
-      "NewPlant": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/Plant"
-          },
-          {
-            "required": [
-              "id"
-            ],
-            "type": "object",
-            "properties": {
-              "id": {
-                "description": "Identification number of the plant",
-                "type": "integer",
-                "format": "int64"
-              }
-            }
-          }
-        ]
-      },
-      "Error": {
-        "required": [
-          "error",
-          "message"
-        ],
-        "type": "object",
-        "properties": {
-          "error": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "message": {
-            "type": "string"
-          }
-        }
-      }
-    },
-    "securitySchemes": {
-      "bearerAuth": {
-        "type": "http",
-        "scheme": "bearer"
-      }
-    }
-  }
 }
