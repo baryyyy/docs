@@ -1,0 +1,467 @@
+---
+title: "חיובים חד-פעמיים (One-Time Payments) - Base44"
+description: "מדריך מלא לחיוב לקוחות חד-פעמי - לקורסים, מוצרים דיגיטליים, או כל רכישה שאינה מנוי"
+---
+
+## מה זה חיוב חד-פעמי?
+
+חיוב חד-פעמי הוא תשלום **שמתבצע פעם אחת בלבד** - ללא חידוש אוטומטי.
+
+<CardGroup cols={2}>
+  <Card title="מנוי (Subscription)" icon="repeat" color="#6366f1">
+    חיוב אוטומטי כל חודש/שנה
+
+    **דוגמאות:** Netflix, Spotify, SaaS
+  </Card>
+  <Card title="חד-פעמי (One-Time)" icon="credit-card" color="#10b981">
+    תשלום יחיד, ללא חזרה
+
+    **דוגמאות:** קורס, ספר, כרטיס לאירוע
+  </Card>
+</CardGroup>
+
+## מתי להשתמש בזה?
+
+<AccordionGroup>
+  <Accordion title="קורסים דיגיטליים 🎓">
+    לקוח משלם פעם אחת ומקבל גישה לכל החיים.
+
+    **דוגמה:** "קורס פיתוח Full-Stack - ₪499 (פעם אחת)"
+  </Accordion>
+  <Accordion title="מוצרים דיגיטליים 📦">
+    eBooks, תבניות, כלים דיגיטליים, פלאגינים.
+
+    **דוגמה:** "תבנית Landing Page - ₪149"
+  </Accordion>
+  <Accordion title="כרטיסים לאירועים 🎟️">
+    כנסים, סדנאות, אירועים חד-פעמיים.
+
+    **דוגמה:** "כרטיס לכנס SaaS 2025 - ₪299"
+  </Accordion>
+  <Accordion title="שירותים חד-פעמיים 💼">
+    ייעוץ, ביקורת קוד, עיצוב לוגו.
+
+    **דוגמה:** "שעת ייעוץ עסקי - ₪500"
+  </Accordion>
+  <Accordion title="תרומות 💝">
+    תרומה לפרויקט, Tip Jar, קפה למפתח.
+
+    **דוגמה:** "קנה לי קפה ☕ - ₪15"
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## ההבדלים מול מנוי
+
+| מאפיין          | מנוי (Subscription)         | חד-פעמי (One-Time)               |
+| --------------- | --------------------------- | -------------------------------- |
+| **תדירות חיוב** | אוטומטי (חודשי/שנתי)        | פעם אחת בלבד                     |
+| **ביטול**       | הלקוח יכול לבטל             | אין מה לבטל                      |
+| **ניהול**       | פורטל ניהול מנוי            | אין צורך בניהול                  |
+| **זיהוי**       | `subscription_uid`          | `order_uid`                      |
+| **חידוש**       | מתחדש אוטומטית              | לא מתחדש                         |
+| **Success URL** | `?subscription_uid=sub_xxx` | `?order_uid=order_xxx&email=...` |
+
+## איך זה עובד?
+
+<Steps>
+  <Step title="לקוח לוחץ 'קנה עכשיו'">
+    הלקוח מגיע לדף המוצר ורוצה לרכוש
+  </Step>
+  <Step title="יצירת לינק תשלום">
+    המערכת שלך יוצרת לינק תשלום אישי עבורו
+  </Step>
+  <Step title="מעבר לדף תשלום">
+    הלקוח מועבר לדף התשלום של Splitz
+  </Step>
+  <Step title="ביצוע תשלום">
+    הלקוח משלם (PayPal או כרטיס אשראי)
+  </Step>
+  <Step title="חזרה לאפליקציה">
+    הלקוח מועבר חזרה עם `order_uid` ופרטי התשלום
+  </Step>
+  <Step title="אימות ומתן גישה">
+    אתה מאמת שההזמנה שולמה ונותן לו גישה למוצר
+  </Step>
+</Steps>
+
+## הקוד המלא
+
+<Info>
+  **דרישות:**
+
+  - חבילת NPM מותקנת: `npm install splitz-payments`
+  - API Key מהמערכת ([הגדרות](https://app.splitz.co.il/settings))
+  - Payment Link UID שיצרת ([לינקים לתשלום](https://app.splitz.co.il/payment-links))
+</Info>
+
+כל הפונקציות ההתממשקות והאינטגרציה עם SPLITZ מתבצעת דרך חבילת הNPM ולא בשום פנים ואופן בצורה ישירה לAPI!
+
+### שלב 1: יצירת לינק תשלום
+
+```javascript
+const SplitzClient = require('splitz-payments');
+
+const splitz = new SplitzClient({
+  apiKey: 'YOUR_API_KEY_HERE'
+});
+
+  // יצירת לינק
+  const options = {
+    payment_link_uid: 'xxx',
+    customer_email: 'customer@example.com'
+  };
+
+  const result = await splitz.paymentLinks.generate(options);
+  console.log(result.url);
+```
+
+לאחר המימוש בקוד, הלקוח חייב להגדיר בהגדרות הלינק לתשלום את הכתובת להפנייה לאחר תשלום מוצלח!
+
+### שלב 2: בדיקה האם הזמנה שולמה לאחר התשלום:
+
+```javascript
+const SplitzClient = require('splitz-payments');
+
+const splitz = new SplitzClient({
+  apiKey: 'YOUR_API_KEY_HERE'
+});
+
+ // בדיקת תשלום
+ const isPaidResult = await splitz.orders.isPaid('order_xxx');
+ console.log(isPaidResult.paid); // boolean
+
+  // שליפת הזמנה
+ const orderResult = await splitz.orders.get('order_xxx');
+ console.log(orderResult.order.email);
+```
+
+---
+
+## Security Checklist
+
+<Steps>
+  <Step title="✅ API Key בצד השרת בלבד">
+    אל תחשוף את ה-API Key בצד הלקוח!
+
+    ```javascript
+    // ❌ לא טוב (Client-side):
+    const splitz = new SplitzClient({ apiKey: '...' });
+    
+    // ✅ טוב (Backend Function):
+    // הקוד רץ בשרת, לא בדפדפן
+    ```
+  </Step>
+  <Step title="✅ אמת תמיד בשרת">
+    אל תסמוך על פרמטרים ב-URL!
+
+    ```javascript
+    // תמיד:
+    const status = await splitz.orders.isPaid(orderUid);
+    if (status.paid) {
+      // תן גישה
+    }
+    ```
+  </Step>
+</Steps>
+
+## סיכום
+
+**תזכורות חשובות:**
+
+- ✅ תמיד תאמת בצד השרת עם `orders.isPaid()`
+- ✅ אל תחשוף API Key בצד הלקוח
+- ✅ שמור `order_uid` בדאטאבייס
+- ✅ שלח מייל אישור לכל תשלום
+- ✅ טפל בשגיאות בצורה ידידותית
+
+```
+תשלום חד-פעמי
+const paymentLink = await splitz.paymentLinks.generate({
+  payment_link_uid: 'xxx',           // ה-Payment Link UID שיצרת
+  customer_email: 'customer@example.com' // מייל הלקוח
+});
+
+// הפנה את הלקוח לדף התשלום
+const paymentUrl = paymentLink.url;
+console.log('לינק לתשלום:', paymentUrl);
+
+// הפנה אותו:
+window.location.href = paymentUrl;
+```
+
+<Warning>
+  **אבטחה קריטית!**
+
+  קריאת ה-API **חייבת** להתבצע בצד השרת (Backend Function), לא בצד הלקוח!
+
+  אם תחשוף את ה-API Key בצד הלקוח - הכסף שלך בסכנה! 🔒
+</Warning>
+
+### טיפול בחזרה מדף התשלום
+
+אחרי שהלקוח משלם, הוא חוזר לכתובת שהגדרת ב-Payment Link (עמוד ההצלחה).
+
+#### הפרמטרים שחוזרים ב-URL:
+
+```
+?order_uid=order_xxx
+```
+
+### אימות התשלום (קריטי!)
+
+<Warning>
+  **חובה לאמת!**
+
+  אל תסמוך רק על הפרמטרים ב-URL!
+
+  מישהו יכול לזייף URL (`?uid=order_xxx`) ולקבל גישה חינם.
+
+  **תמיד** תאמת בצד השרת שההזמנה באמת שולמה! 🔐
+</Warning>
+
+---
+
+## Order Object - מבנה נתונים
+
+כשאתה קורא ל-`splitz.orders.get()`, תקבל אובייקט עם השדות הבאים:
+
+```
+{
+  uid: string;              // מזהה ייחודי של ההזמנה
+  email: string;           // אימייל הלקוח
+  price: number;           // מחיר (לדוגמה: 499)
+  currency: string;        // מטבע (ILS)
+  status: string;          // סטטוס ההזמנה
+  is_paid: boolean;        // האם שולם?
+  paid_at: string | null;  // תאריך תשלום (ISO format)
+  createdAt: string;       // תאריך יצירה
+}
+```
+
+---
+
+---
+
+## שילוב עם Lovable
+
+אם אתה משתמש ב-Lovable, הנה prompt מוכן:
+
+````
+אני רוצה להוסיף כפתור "קנה עכשיו" לדף המוצר שלי.
+
+כשלוחצים עליו:
+1. יצור לינק תשלום חד-פעמי ב-Splitz
+2. יעביר את הלקוח לדף התשלום
+3. אחרי תשלום מוצלח - יאמת ויתן לו גישה למוצר
+
+השתמש בחבילת NPM: splitz-payments
+
+צור Backend Function שעושה:
+
+```javascript
+const SplitzClient = require('splitz-payments');
+
+const splitz = new SplitzClient({
+  apiKey: 'YOUR_API_KEY_HERE' // החלף!
+});
+
+// יצירת לינק תשלום
+const paymentLink = await splitz.paymentLinks.generate({
+  payment_link_uid: 'xxx', // החלף ל-Payment Link שלך
+  customer_email: 'מייל המשתמש המחובר'
+});
+
+לאחר מכן תוכל להחזיר לצד הלקוח את הלינק שחזר מהמשתנה paymentLink
+````
+
+צור עמוד חדש "purchase-success" שמאמת את התשלום:
+
+אל תשתמש ב-ENV - הכנס את ה-API Key כמחרוזת ישירות. הקוד חייב להיות Backend Function, לא בצד לקוח!
+
+````
+
+---
+
+## טיפול בשגיאות
+
+הספרייה מספקת error classes ייעודיים:
+
+```javascript
+const { errors } = require('splitz-payments');
+
+try {
+  const status = await splitz.orders.isPaid('order_xxx');
+  
+} catch (error) {
+  if (error instanceof errors.NotFoundError) {
+    console.error('❌ הזמנה לא נמצאה');
+    alert('ההזמנה לא קיימת במערכת. צור קשר עם התמיכה.');
+    
+  } else if (error instanceof errors.AuthenticationError) {
+    console.error('❌ API key לא תקין');
+    
+  } else if (error instanceof errors.ForbiddenError) {
+    console.error('❌ אין הרשאה לגשת להזמנה זו');
+    
+  } else if (error instanceof errors.SplitzAPIError) {
+    console.error('❌ שגיאת API:', error.message);
+    console.error('סטטוס:', error.statusCode);
+  }
+}
+````
+
+### סוגי שגיאות:
+
+- **`SplitzAPIError`** - שגיאה כללית מה-API
+- **`ValidationError`** - פרמטרים לא תקינים
+- **`AuthenticationError`** - API key לא תקין או חסר
+- **`NotFoundError`** - משאב לא נמצא (404)
+- **`ForbiddenError`** - אין הרשאה (403)
+
+---
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title='❌ שגיאה: "Invalid payment_link_uid"'>
+    **הבעיה:** ה-Payment Link לא קיים או לא מוגדר לחיובים חד-פעמיים.
+
+    **הפתרון:**
+
+    1. היכנס ל-[Dashboard](https://app.splitz.co.il) → **לינקים לתשלום**
+    2. ודא שהלינק מסומן כ-**"חד-פעמי"** (לא מנוי)
+    3. העתק את ה-`payment_link_uid` הנכון (מתחיל ב-`pl_`)
+  </Accordion>
+  <Accordion title="❌ הלקוח לא מועבר לדף תשלום">
+    **הבעיה:** הקוד לא מפנה נכון.
+
+    **הפתרון:**
+
+    ```javascript
+    // ✅ נכון:
+    window.location.href = paymentLink.url;
+    
+    // ❌ לא יעבוד (רק מדפיס):
+    console.log(paymentLink.url);
+    ```
+  </Accordion>
+  <Accordion title="❌ אחרי תשלום - אין פרמטרים ב-URL">
+    **הבעיה:** עמוד ההצלחה לא מוגדר ב-Payment Link.
+
+    **הפתרון:**
+
+    1. היכנס ל-Dashboard → **לינקים לתשלום**
+    2. ערוך את הלינק
+    3. הוסף "כתובת הפניה לאחר תשלום" (Success URL)
+    4. לדוגמה: `https://myapp.com/purchase-success`
+  </Accordion>
+  <Accordion title='❌ שגיאה: "Order not found"'>
+    **הבעיה:** ה-order_uid לא נכון או לא קיים.
+
+    **הפתרון:**
+
+    1. בדוק שאתה קורא נכון את הפרמטר:
+
+    ```javascript
+    const orderUid = urlParams.get('uid') || urlParams.get('order_uid');
+    ```
+
+    2. וודא שהפרמטר באמת קיים ב-URL
+    3. בדוק ב-Dashboard → **הזמנות** אם ההזמנה קיימת
+  </Accordion>
+  <Accordion title="❌ התשלום הצליח אבל `is_paid = false`">
+    **הבעיה:** PayPal עדיין מעבד את התשלום.
+
+    **הפתרון:** זה נורמלי - לפעמים לוקח 1-2 דקות.
+
+    תצג ללקוח:
+
+    ```
+    "התשלום בתהליך אישור... נודיע לך כשזה יושלם!"
+    ```
+
+    חכה 30 שניות ונסה שוב, או השתמש ב-Webhook.
+  </Accordion>
+  <Accordion title="❌ לקוח שילם אבל לא קיבל גישה">
+    **הבעיה:** הקוד לא נתן לו גישה אוטומטית.
+
+    **הפתרון:**
+
+    1. בדוק ב-Dashboard → **הזמנות** - האם התשלום מופיע כ-Paid?
+    2. בדוק את הקונסול (F12) - יש שגיאות JavaScript?
+    3. ודא שהקוד של `grantAccess()` רץ
+    4. בדוק שהנתונים נשמרו בדאטאבייס
+    5. השתמש ב-Webhook כפתרון גיבוי
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## שאלות נפוצות
+
+<AccordionGroup>
+  <Accordion title="האם אפשר להחזיר כסף (Refund)?">
+    כן. אתה יכול להחזיר כסף ישירות מה-[Dashboard](https://app.splitz.co.il).
+
+    **הזמנות** → בחר הזמנה → **החזר כסף**
+
+    הכסף יחזור ללקוח תוך 5-10 ימי עסקים.
+  </Accordion>
+  <Accordion title="מה ההבדל בין `orders.isPaid()` ל-`orders.get()`?">
+    - **`isPaid()`** - בדיקה מהירה, מחזיר רק `{ paid: true/false }`
+    - **`get()`** - מחזיר את כל פרטי ההזמנה (מייל, מחיר, תאריכים וכו')
+
+    **מתי להשתמש במה:**
+
+    - רק רוצה לדעת אם שולם? → `isPaid()`
+    - צריך פרטים נוספים? → `get()`
+  </Accordion>
+  <Accordion title="האם אפשר למכור מנוי וחד-פעמי באותה אפליקציה?">
+    בהחלט! פשוט השתמש ב-Payment Links שונים:
+
+    - `pl_subscription_monthly` למנויים
+    - `pl_course_onetime` לקורסים חד-פעמיים
+
+    התשלומים יופיעו ב-Dashboard בנפרד.
+  </Accordion>
+  <Accordion title="איך עוקבים אחרי כל התשלומים?">
+    ב-[Dashboard](https://app.splitz.co.il) → **הזמנות**
+
+    תראה:
+
+    - כל התשלומים (מנויים + חד-פעמיים)
+    - סטטוס (Paid / Pending)
+    - סכומים
+    - מיילים של לקוחות
+    - Export ל-Excel
+  </Accordion>
+  <Accordion title="מה קורה אם לקוח משלם פעמיים בטעות?">
+    זה לא אמור לקרות (הלינך תקף רק לתשלום אחד).
+
+    אם זה קרה בכל זאת - פשוט תחזיר כסף על אחד התשלומים מה-Dashboard.
+  </Accordion>
+  <Accordion title="האם צריך לשמור את ה-order_uid בדאטאבייס?">
+    **כן, מומלץ מאוד!**
+
+    זה מאפשר לך:
+
+    - לעקוב אחרי מי שילם
+    - למנוע duplicate purchases
+    - לתת support (הלקוח אומר "שילמתי ואין לי גישה")
+    - לעשות refund אם צריך
+
+    ```javascript
+    await db.purchases.create({
+      user_id: userId,
+      order_uid: order.uid,
+      email: order.email,
+      amount: order.price,
+      purchased_at: order.paid_at
+    });
+    ```
+  </Accordion>
+</AccordionGroup>
+
+---

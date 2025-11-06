@@ -1,0 +1,346 @@
+---
+title: "חיבור סליקה לאפליקציית base44"
+---
+
+<Info>
+  זמן משוער: 15 דקות התקנה.
+</Info>
+
+<Info>
+  **דרישות התהליך:**
+
+  - חשבון פייפאל עסקי מאושר
+  - דף מוכן לבחירת חבילות / תשלום באפליקציה שלכם
+  - חשבון ספליטז מוגדר ומאושר לתשלום
+  - חבילת Builder לגישה לפונקציות backend
+</Info>
+
+תהליך האינטגרציה מורכב מ3 שלבים מאוד פשוט שמבוססים על הגיון פשוט:
+
+זיהוי לקוח ותשלום -\> ולידציה לאחר תשלום -\> יצירת לינק ניהול ללקוחות
+
+בהתחלה, ברגע שלקוח מבקש ממכם להירשם לחבילה מסויימת, אתם תהיו חייבים לשייך לינק לתשלום עם המייל שלו אצלנו במערכת
+
+<Info>
+  **מה זה לינק לתשלום?**
+
+  לינק לתשלום הוא דף תשלום שהמערכת שלנו משייכת ללקוח שלכם, הדרך שלנו לזהות מי ביצע את התשלום אצלכם הוא על ידי המייל של הלקוח, ולכן ברגע שלקוח מעוניין להירשם לחבילה אצלכם אתם חייבים להגיד לנו מי רוצה לשלם כדי שאחרי זה תוכלו לוודא שאותו לקוח שילם אחרי הרכישה, ולתת לו גישה למערכת שלכם.
+</Info>
+
+אחרי שהבנתם את הרקע הטכני, בואו נתחיל בהגדרה של לינק התשלום אצלכם במערכת.
+
+<Danger>
+  חשוב מאוד שכל הקריאות שאתם מבצעים למערכת שלנו לא יהיו חשופות לצד הלקוח על מנת לשמור על
+
+  תהליך התשלום שלכם מאובטח. בbase44 ניתן לעשות זאת באמצעות פיצר שנקרא Backend Function.
+</Danger>
+
+<Steps>
+  <Step title="זיהוי לקוח ותשלום">
+    הפרומט בשלב הזה אומר לAI שלכם להגדיר פונקציונליות לכפתור רכישה לחבילה מסויימת
+
+    הפונקציונליות פה היא פנייה למערכת שלנו על מנת לקבל לינק לתשלום, ולאחר מכן להעביר את הלקוח ללינק שהחזרנו למערכת שלכם.
+
+    שימו לב שבפרומט הזה אתם צריכים לשנות 2  דברים:
+
+    1. הAPI KEY שלכם למה שמופיע לכם במסך ההגדרות במערכת שלנו.
+    2. המזהה לינק לתשלום שלכם (payment_link_uid) למה שיצרתם במערכת שלנו.
+
+    אחרי ששיניתם את הדברים האלו תוכלו לשלוח לAI את הפרומט.
+
+    ```expandable
+    עכשיו אדריך אותך בעת לחיצה על כפתור התשלום, אני רוצה שתשתמש בחבילת NPM שנקראת splitz-payments על מנת לחבר את הסליקה למערכת שלי באופן שלא חשוף לצד לקוח, אני רוצה שתיצור לינק לתשלום שמשוייך ללקוח שכרגע מחובר, ולאחר מכן תעביר אותו ללינק שמשוייך אליו.
+    
+    דוגמא ליצירת לינק לתשלום שמשוייך ללקוח:
+    const SplitzClient = require('splitz-payments');
+    
+    const splitz = new SplitzClient({
+      apiKey: 'your-api-key-here'
+    });
+    
+    const paymentLink = await splitz.paymentLinks.generate({
+      payment_link_uid: 'pl_xxx',
+      customer_email: 'האימייל של הלקוח שכרגע מחובר למערכת'
+    });
+    
+    const url = paymentLink.url;
+    ותעביר את המשתמש לURL שחזר
+    DONT USE ENV FOR API KEY, USE IT AS STRING.
+    ```
+  </Step>
+  <Step title="אימות תשלום וגישה למערכת">
+    השלב השני נועד לבדוק האם הלקוח שלכם אכן שילם אחרי שיצא מלינק התשלום ששלחנו אותו עכשיו, במידה והוא שילם אנחנו מגדירים אותו במערכת כלקוח משלם ונותנים לו גישה למערכת.
+
+    שימו לב שגם בפרומפט הזה יש דבר שאנחנו צריכים לשנות והוא הAPI KEY שלכם למה שמופיע לכם במסך ההגדרות במערכת שלנו.
+
+    ````
+    אני רוצה ליצור עמוד חדש בשם "subscription-success".
+    
+    כשלקוח מגיע לעמוד הזה (אחרי תשלום), אני רוצה:
+    1. לקחת את ה-subscription_uid מה-URL
+    2. לוודא שהמנוי פעיל
+    3. לשייך את המנוי הזה למשתמש בדאטאבייס
+    4. לתת לו גישה למערכת
+    
+    צור Backend Function שעושה:
+    ```javascript
+    const SplitzClient = require('splitz-payments');
+    
+    const splitz = new SplitzClient({
+      apiKey: 'YOUR_API_KEY_HERE' // החלף בAPI Key שלך
+    });
+    
+    // קבלת פרטי המנוי
+    const result = await splitz.subscriptions.get({
+      subscription_uid: 'subscription_uid שהגיע מה-URL'
+    });
+    
+    const subscription = result.subscription;
+    
+    // בדיקת סטטוס
+    if (subscription.status === 'active' || subscription.status === 'cancelled') {
+      // המנוי תקף - תן למשתמש גישה
+      // שמור את subscription_uid בדאטאבייס
+      
+      console.log('המשתמש שילם! ✅');
+      console.log('Product UID:', subscription.product_uid);
+      console.log('Status:', subscription.status);
+      
+    } else if (subscription.status === 'expired') {
+      // המנוי פג תוקף - חסום גישה
+      console.log('המנוי פג תוקף ❌');
+    }
+    ```
+    
+    אל תשתמש ב-ENV. השתמש במחרוזת ישירות.
+    הצג מסך טעינה בזמן הבדיקה.
+    ````
+  </Step>
+</Steps>
+
+## הוספת כפתור ניהול מנוי
+
+הפורטל מאפשר ללקוחות שלכם לצפות בפרטי המנוי שלהם, ולבטל או לשנות את המנוי שלהם בהתאם למה שהם רוצים / צריכים.
+
+שימו לב שגם בפרומפט הזה יש דבר שאנחנו צריכים לשנות והוא:
+
+1. הAPI KEY שלכם למה שמופיע לכם במסך ההגדרות במערכת שלנו.
+
+````
+אני רוצה להוסיף כפתור "נהל מנוי" לדף הפרופיל.
+
+הכפתור יהיה זמין רק למשתמשים שיש להם מנוי פעיל.
+
+כשלוחצים עליו:
+1. יצור לינק זמני לניהול מנוי
+2. יעביר את המשתמש ללינק הזה
+
+צור Backend Function:
+```javascript
+const SplitzClient = require('splitz-payments');
+
+const splitz = new SplitzClient({
+  apiKey: 'YOUR_API_KEY_HERE'
+});
+
+// יצירת לינק ניהול
+const portal = await splitz.subscriptions.createManagementLink(
+  'subscription_uid של המשתמש שמחובר (מהדאטאבייס)'
+);
+
+const managementUrl = portal.data.management_url;
+const expiresIn = portal.data.expires_in_hours;
+
+console.log('לינק ניהול:', managementUrl);
+console.log('פג תוקף בעוד:', expiresIn, 'שעות');
+
+// העבר את המשתמש ל-managementUrl
+```
+
+אל תשתמש ב-ENV.
+````
+
+## שינוי בין חבילות למנוי
+
+## מה זה שינוי תוכנית?
+
+שינוי תוכנית מאפשר ללקוחות שלך לעבור בין תוכניות שונות (למשל, מ-Basic ל-Premium) **במהלך תקופת המנוי**.
+
+<Info>
+  **Prorated Billing - מה זה?**
+
+  נניח שלקוח שילם ₪99 לחודש (Basic), ובאמצע החודש הוא רוצה לעבור ל-Premium (₪199).
+
+  הוא כבר שילם עבור Basic, אז הוא צריך לשלם רק את **ההפרש** עבור הזמן שנותר:
+
+  - שילם: ₪99 לחודש שלם
+  - השתמש: 15 ימים ב-Basic (₪49.50)
+  - נשאר: 15 ימים → צריך Premium (₪99.50)
+  - **חיוב נוסף: ₪50** (ההפרש)
+
+  זה נקרא **Prorated Billing** - אתה משלם רק עבור מה שאתה משתמש.
+</Info>
+
+---
+
+## מתי להשתמש בזה?
+
+<CardGroup cols={2}>
+  <Card title="Upgrade" icon="arrow-up" color="#10b981">
+    לקוח רוצה לשדרג לתוכנית יותר יקרה
+
+    **דוגמה:** Basic → Premium
+  </Card>
+  <Card title="Downgrade" icon="arrow-down" color="#f59e0b">
+    לקוח רוצה להוריד לתוכנית זולה יותר
+
+    **דוגמה:** Premium → Basic
+  </Card>
+</CardGroup>
+
+<Warning>
+  **הערה חשובה:**
+
+  בשינוי תוכנית - הלקוח **לא מבטל** את המנוי הישן.\
+  הוא פשוט **משנה** אותו לתוכנית אחרת, והתאריך חידוש נשאר אותו דבר.
+</Warning>
+
+## איך זה עובד?
+
+<Steps>
+  <Step title="לקוח מבקש לשנות תוכנית">
+    הלקוח לוחץ "שדרג ל-Premium" באפליקציה שלך
+  </Step>
+  <Step title="אתה שולח בקשה ל-Splitz">
+    המערכת שלך שולחת ל-Splitz את המנוי + התוכנית החדשה
+  </Step>
+  <Step title="Splitz מחשב Prorated">
+    המערכת מחשבת כמה הלקוח צריך לשלם (או מקבל זיכוי)
+  </Step>
+  <Step title="לקוח מאשר">
+    הלקוח מועבר לדף אישור ומשלם
+  </Step>
+  <Step title="התוכנית משתנה">
+    המנוי עודכן לתוכנית החדשה! 🎉
+  </Step>
+</Steps>
+
+## הקוד
+
+### שליחת בקשה לשינוי תוכנית
+
+```
+const SplitzClient = require('splitz-payments');
+
+const splitz = new SplitzClient({
+  apiKey: 'YOUR_API_KEY_HERE'
+});
+
+// בקשה לשינוי תוכנית
+const changeRequest = await splitz.subscriptions.requestProductChange({
+  subscription_uid: 'sub_xxx',           // ה-subscription_uid של הלקוח
+  target_product_uid: 'prod_yyy',        // התוכנית החדשה שהוא רוצה
+  return_url: 'https://myapp.com/success' // לאן להפנות אחרי אישור
+});
+
+// הנתונים שחוזרים:
+console.log('URL לאישור:', changeRequest.data.approval_url);
+console.log('סכום Prorated:', changeRequest.data.prorated_amount);
+console.log('דורש תשלום?', changeRequest.data.requires_payment);
+```
+
+<Accordion title="הסבר על הפרמטרים">
+  **`subscription_uid`**\
+  מזהה המנוי הנוכחי של הלקוח (זה שרצים עכשיו)
+
+  **`target_product_uid`**\
+  מזהה התוכנית שהלקוח רוצה לעבור אליה
+
+  אפשר למצוא ב-Dashboard → **מוצרים** → לחץ על המוצר → `product_uid`
+
+  **`return_url`**\
+  הכתובת שהלקוח יחזור אליה **אחרי שישלים** את התשלום (או יאשר ללא תשלום)
+</Accordion>
+
+---
+
+### טיפול בתגובה
+
+המערכת מחזירה לך 3 דברים חשובים:
+
+<ParamField path="approval_url" type="string">
+  הקישור שאליו צריך להעביר את הלקוח לאישור השינוי
+</ParamField>
+
+<ParamField path="prorated_amount" type="number">
+  הסכום ש**צריך לשלם** (חיובי) או **זיכוי** (שלילי)
+
+  **דוגמאות:**
+
+  - `50` → לקוח צריך לשלם ₪50
+  - `-30` → לקוח מקבל זיכוי של ₪30
+  - `0` → אין תשלום נוסף
+</ParamField>
+
+<ParamField path="requires_payment" type="boolean">
+  האם הלקוח צריך לשלם כסף נוסף?
+
+  - `true` → צריך לשלם (Upgrade)
+  - `false` → אין תשלום (Downgrade או Prorated = 0)
+</ParamField>
+
+---
+
+בכל המקרים המשתמש חייב לעבור לapprove_url לבצע את האישור עצמאית!
+
+---
+
+## טיפול בחזרה מדף האישור
+
+אחרי שהלקוח משלם (או מאשר), הוא חוזר ל-`return_url` שהגדרת.
+
+### הפרמטרים שחוזרים ב-URL:
+
+| פרמטר              | סוג    | תיאור                          |
+| ------------------ | ------ | ------------------------------ |
+| `status`           | string | `success` או `failed`          |
+| `subscription_uid` | string | מזהה המנוי (לאימות)            |
+| `new_plan`         | string | שם התוכנית החדשה (מקודד ב-URL) |
+| `prorated_charge`  | number | הסכום ששולם (או זוכה)          |
+
+---
+
+### קוד לטיפול בפרמטרים:
+
+```
+// בעמוד upgrade-success:
+
+// קרא את הפרמטרים מה-URL
+const urlParams = new URLSearchParams(window.location.search);
+
+// בדוק את הסטטוס
+const status = urlParams.get('status');
+
+if (status === 'success') {
+  console.log('✅ שינוי תוכנית הצליח!');
+  
+  // נתונים נוספים:
+  const subscriptionUid = urlParams.get('subscription_uid');
+  const newPlan = decodeURIComponent(urlParams.get('new_plan'));
+  const proratedCharge = urlParams.get('prorated_charge');
+  
+  console.log('מנוי:', subscriptionUid);
+  console.log('תוכנית חדשה:', newPlan);
+  console.log('סכום ששולם:', proratedCharge, '₪');
+  
+  // עדכן את הדאטאבייס:
+  // await updateUserPlan(subscriptionUid, newPlan);
+  
+  // הצג הודעה למשתמש:
+  alert(`מעולה! עברת ל-${newPlan} בהצלחה 🎉`);
+  
+} else if (status === 'failed') {
+  console.log('❌ שינוי תוכנית נכשל');
+  
+  // הצג הודעה
+```
