@@ -21,7 +21,9 @@
             "pages": [
               "index",
               "lovable",
-              "lovable-onetime"
+              "lovable-onetime",
+              "base44",
+              "base44-onetime"
             ]
           },
           {
