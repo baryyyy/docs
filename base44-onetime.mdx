@@ -115,6 +115,8 @@ const splitz = new SplitzClient({
 
  const result = await splitz.paymentLinks.generate(options);
  console.log(result.url);
+
+// return the url to the frontend using res.json({....
 ```
 
 לאחר המימוש בקוד, הלקוח חייב להגדיר בהגדרות הלינק לתשלום את הכתובת להפנייה לאחר תשלום מוצלח!
@@ -135,6 +137,9 @@ const splitz = new SplitzClient({
   // שליפת הזמנה
  const orderResult = await splitz.orders.get('order_uid');
  console.log(orderResult.order.email);
+
+// validate if the order was paid using the parmas the backend function recived.
+// then return the reuslt to the frontend.
 ```
 
 ---
@@ -224,10 +229,6 @@ const splitz = new SplitzClient({
   createdAt: string;       // תאריך יצירה
 }
 ```
-
----
-
----
 
 ## שילוב עם Lovable
 
