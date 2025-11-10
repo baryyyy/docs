@@ -12,6 +12,7 @@ title: "חיבור סליקה לאפליקציית Lovable"
   - חשבון פייפאל עסקי מאושר
   - דף מוכן לבחירת חבילות / תשלום באפליקציה שלכם
   - חשבון ספליטז מוגדר ומאושר לתשלום
+  - לינק לתשלום שמקושר למוצר מנוי
 </Info>
 
 תהליך האינטגרציה מורכב מ3 שלבים מאוד פשוט שמבוססים על הגיון פשוט:
@@ -40,17 +41,9 @@ title: "חיבור סליקה לאפליקציית Lovable"
 
     הפונקציונליות פה היא פנייה למערכת שלנו על מנת לקבל לינק לתשלום, ולאחר מכן להעביר את הלקוח ללינק שהחזרנו למערכת שלכם.
 
-    שימו לב שבפרומט הזה אתם צריכים לשנות 2  דברים:
+    מזהה לינק לתשלום ניתן להשיג במערכת מהמסך לינקים לתשלום -\> בחירת הלינק שלהם
 
-    1. הAPI KEY שלכם למה שמופיע לכם במסך ההגדרות במערכת שלנו.
-    2. המזהה לינק לתשלום שלכם (payment_link_uid) למה שיצרתם במערכת שלנו.
-
-    אחרי ששיניתם את הדברים האלו תוכלו לשלוח לAI את הפרומט.
-
-    ```expandable
-    עכשיו אדריך אותך בעת לחיצה על כפתור התשלום, אני רוצה שתשתמש בחבילת NPM שנקראת splitz-payments על מנת לחבר את הסליקה למערכת שלי באופן שלא חשוף לצד לקוח, אני רוצה שתיצור לינק לתשלום שמשוייך ללקוח שכרגע מחובר, ולאחר מכן תעביר אותו ללינק שמשוייך אליו.
-    
-    דוגמא ליצירת לינק לתשלום שמשוייך ללקוח:
+    ```javascript
     const SplitzClient = require('splitz-payments');
     
     const splitz = new SplitzClient({
@@ -58,30 +51,19 @@ title: "חיבור סליקה לאפליקציית Lovable"
     });
     
     const paymentLink = await splitz.paymentLinks.generate({
-      payment_link_uid: 'pl_xxx',
+      payment_link_uid: 'PAYMENT_LINK_UID',
       customer_email: 'האימייל של הלקוח שכרגע מחובר למערכת'
     });
     
     const url = paymentLink.url;
-    ותעביר את המשתמש לURL שחזר
-    DONT USE ENV FOR API KEY, USE IT AS STRING.
+    // return the url to the frontend using res.json({...
     ```
   </Step>
   <Step title="אימות תשלום וגישה למערכת">
     השלב השני נועד לבדוק האם הלקוח שלכם אכן שילם אחרי שיצא מלינק התשלום ששלחנו אותו עכשיו, במידה והוא שילם אנחנו מגדירים אותו במערכת כלקוח משלם ונותנים לו גישה למערכת.
 
-    שימו לב שגם בפרומפט הזה יש דבר שאנחנו צריכים לשנות והוא הAPI KEY שלכם למה שמופיע לכם במסך ההגדרות במערכת שלנו.
+    THIS CODE WILL ONLY BE USED ON THE BACKEND.
 
-    ````
-    אני רוצה ליצור עמוד חדש בשם "subscription-success".
-    
-    כשלקוח מגיע לעמוד הזה (אחרי תשלום), אני רוצה:
-    1. לקחת את ה-subscription_uid מה-URL
-    2. לוודא שהמנוי פעיל
-    3. לשייך את המנוי הזה למשתמש בדאטאבייס
-    4. לתת לו גישה למערכת
-    
-    צור Backend Function שעושה:
     ```javascript
     const SplitzClient = require('splitz-payments');
     
@@ -110,10 +92,6 @@ title: "חיבור סליקה לאפליקציית Lovable"
       console.log('המנוי פג תוקף ❌');
     }
     ```
-    
-    אל תשתמש ב-ENV. השתמש במחרוזת ישירות.
-    הצג מסך טעינה בזמן הבדיקה.
-    ````
   </Step>
 </Steps>
 
@@ -121,20 +99,6 @@ title: "חיבור סליקה לאפליקציית Lovable"
 
 הפורטל מאפשר ללקוחות שלכם לצפות בפרטי המנוי שלהם, ולבטל או לשנות את המנוי שלהם בהתאם למה שהם רוצים / צריכים.
 
-שימו לב שגם בפרומפט הזה יש דבר שאנחנו צריכים לשנות והוא:
-
-1. הAPI KEY שלכם למה שמופיע לכם במסך ההגדרות במערכת שלנו.
-
-````
-אני רוצה להוסיף כפתור "נהל מנוי" לדף הפרופיל.
-
-הכפתור יהיה זמין רק למשתמשים שיש להם מנוי פעיל.
-
-כשלוחצים עליו:
-1. יצור לינק זמני לניהול מנוי
-2. יעביר את המשתמש ללינק הזה
-
-צור Backend Function:
 ```javascript
 const SplitzClient = require('splitz-payments');
 
@@ -153,11 +117,8 @@ const expiresIn = portal.data.expires_in_hours;
 console.log('לינק ניהול:', managementUrl);
 console.log('פג תוקף בעוד:', expiresIn, 'שעות');
 
-// העבר את המשתמש ל-managementUrl
+// return the url to the frontend using res.json({...
 ```
-
-אל תשתמש ב-ENV.
-````
 
 ## שינוי בין חבילות למנוי
 
@@ -228,7 +189,7 @@ console.log('פג תוקף בעוד:', expiresIn, 'שעות');
 
 ### שליחת בקשה לשינוי תוכנית
 
-```
+```javascript
 const SplitzClient = require('splitz-payments');
 
 const splitz = new SplitzClient({
@@ -237,8 +198,8 @@ const splitz = new SplitzClient({
 
 // בקשה לשינוי תוכנית
 const changeRequest = await splitz.subscriptions.requestProductChange({
-  subscription_uid: 'sub_xxx',           // ה-subscription_uid של הלקוח
-  target_product_uid: 'prod_yyy',        // התוכנית החדשה שהוא רוצה
+  subscription_uid: 'XXXX',           // ה-subscription_uid של הלקוח
+  target_product_uid: 'XXXX',        // התוכנית החדשה שהוא רוצה
   return_url: 'https://myapp.com/success' // לאן להפנות אחרי אישור
 });
 
@@ -288,11 +249,7 @@ console.log('דורש תשלום?', changeRequest.data.requires_payment);
   - `false` → אין תשלום (Downgrade או Prorated = 0)
 </ParamField>
 
----
-
 בכל המקרים המשתמש חייב לעבור לapprove_url לבצע את האישור עצמאית!
-
----
 
 ## טיפול בחזרה מדף האישור
 
@@ -306,40 +263,3 @@ console.log('דורש תשלום?', changeRequest.data.requires_payment);
 | `subscription_uid` | string | מזהה המנוי (לאימות)            |
 | `new_plan`         | string | שם התוכנית החדשה (מקודד ב-URL) |
 | `prorated_charge`  | number | הסכום ששולם (או זוכה)          |
-
----
-
-### קוד לטיפול בפרמטרים:
-
-```
-// בעמוד upgrade-success:
-
-// קרא את הפרמטרים מה-URL
-const urlParams = new URLSearchParams(window.location.search);
-
-// בדוק את הסטטוס
-const status = urlParams.get('status');
-
-if (status === 'success') {
-  console.log('✅ שינוי תוכנית הצליח!');
-  
-  // נתונים נוספים:
-  const subscriptionUid = urlParams.get('subscription_uid');
-  const newPlan = decodeURIComponent(urlParams.get('new_plan'));
-  const proratedCharge = urlParams.get('prorated_charge');
-  
-  console.log('מנוי:', subscriptionUid);
-  console.log('תוכנית חדשה:', newPlan);
-  console.log('סכום ששולם:', proratedCharge, '₪');
-  
-  // עדכן את הדאטאבייס:
-  // await updateUserPlan(subscriptionUid, newPlan);
-  
-  // הצג הודעה למשתמש:
-  alert(`מעולה! עברת ל-${newPlan} בהצלחה 🎉`);
-  
-} else if (status === 'failed') {
-  console.log('❌ שינוי תוכנית נכשל');
-  
-  // הצג הודעה
-```

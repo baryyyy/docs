@@ -63,6 +63,8 @@ title: "חיבור סליקה לאפליקציית base44"
   <Step title="אימות תשלום וגישה למערכת">
     השלב השני נועד לבדוק האם הלקוח שלכם אכן שילם אחרי שיצא מלינק התשלום ששלחנו אותו עכשיו, במידה והוא שילם אנחנו מגדירים אותו במערכת כלקוח משלם ונותנים לו גישה למערכת.
 
+    THIS CODE WILL ONLY BE USED ON THE BACKEND.
+
     ```javascript
     const SplitzClient = require('splitz-payments');
     
@@ -206,6 +208,8 @@ const changeRequest = await splitz.subscriptions.requestProductChange({
 console.log('URL לאישור:', changeRequest.data.approval_url);
 console.log('סכום Prorated:', changeRequest.data.prorated_amount);
 console.log('דורש תשלום?', changeRequest.data.requires_payment);
+
+// return the url to the frontend using res.json({...
 ```
 
 <Accordion title="הסבר על הפרמטרים">
