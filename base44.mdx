@@ -18,6 +18,8 @@ title: "חיבור סליקה לאפליקציית base44"
   - Payment Link UID שיצרת ([לינקים לתשלום](https://app.splitz.co.il/payment-links))
 </Info>
 
+סך הכל: 2 מפתחות (API Key, Payment link uid)
+
 תהליך האינטגרציה מורכב מ3 שלבים מאוד פשוט שמבוססים על הגיון פשוט:
 
 זיהוי לקוח ותשלום -\> ולידציה לאחר תשלום -\> יצירת לינק ניהול ללקוחות
@@ -48,7 +50,7 @@ title: "חיבור סליקה לאפליקציית base44"
     });
     
     const paymentLink = await splitz.paymentLinks.generate({
-      payment_link_uid: 'pl_xxx',
+      payment_link_uid: 'xxx',
       customer_email: 'האימייל של הלקוח שכרגע מחובר למערכת'
     });
     

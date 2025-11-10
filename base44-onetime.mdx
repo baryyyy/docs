@@ -129,11 +129,11 @@ const splitz = new SplitzClient({
 });
 
  // בדיקת תשלום
- const isPaidResult = await splitz.orders.isPaid('order_xxx');
+ const isPaidResult = await splitz.orders.isPaid('order_uid');
  console.log(isPaidResult.paid); // boolean
 
   // שליפת הזמנה
- const orderResult = await splitz.orders.get('order_xxx');
+ const orderResult = await splitz.orders.get('order_uid');
  console.log(orderResult.order.email);
 ```
 
@@ -175,21 +175,6 @@ const splitz = new SplitzClient({
 - ✅ שמור `order_uid` בדאטאבייס
 - ✅ שלח מייל אישור לכל תשלום
 - ✅ טפל בשגיאות בצורה ידידותית
-
-```
-תשלום חד-פעמי
-const paymentLink = await splitz.paymentLinks.generate({
-  payment_link_uid: 'xxx',           // ה-Payment Link UID שיצרת
-  customer_email: 'customer@example.com' // מייל הלקוח
-});
-
-// הפנה את הלקוח לדף התשלום
-const paymentUrl = paymentLink.url;
-console.log('לינק לתשלום:', paymentUrl);
-
-// הפנה אותו:
-window.location.href = paymentUrl;
-```
 
 <Warning>
   **אבטחה קריטית!**
