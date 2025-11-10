@@ -13,6 +13,9 @@ title: "חיבור סליקה לאפליקציית base44"
   - דף מוכן לבחירת חבילות / תשלום באפליקציה שלכם
   - חשבון ספליטז מוגדר ומאושר לתשלום
   - חבילת Builder לגישה לפונקציות backend
+  - חבילת NPM מותקנת: `npm install splitz-payments`
+  - API Key מהמערכת ([הגדרות](https://app.splitz.co.il/settings))
+  - Payment Link UID שיצרת ([לינקים לתשלום](https://app.splitz.co.il/payment-links))
 </Info>
 
 תהליך האינטגרציה מורכב מ3 שלבים מאוד פשוט שמבוססים על הגיון פשוט:
@@ -36,26 +39,12 @@ title: "חיבור סליקה לאפליקציית base44"
 </Danger>
 
 <Steps>
-  <Step title="זיהוי לקוח ותשלום">
-    הפרומט בשלב הזה אומר לAI שלכם להגדיר פונקציונליות לכפתור רכישה לחבילה מסויימת
-
-    הפונקציונליות פה היא פנייה למערכת שלנו על מנת לקבל לינק לתשלום, ולאחר מכן להעביר את הלקוח ללינק שהחזרנו למערכת שלכם.
-
-    שימו לב שבפרומט הזה אתם צריכים לשנות 2  דברים:
-
-    1. הAPI KEY שלכם למה שמופיע לכם במסך ההגדרות במערכת שלנו.
-    2. המזהה לינק לתשלום שלכם (payment_link_uid) למה שיצרתם במערכת שלנו.
-
-    אחרי ששיניתם את הדברים האלו תוכלו לשלוח לAI את הפרומט.
-
-    ```expandable
-    עכשיו אדריך אותך בעת לחיצה על כפתור התשלום, אני רוצה שתשתמש בחבילת NPM שנקראת splitz-payments על מנת לחבר את הסליקה למערכת שלי באופן שלא חשוף לצד לקוח, אני רוצה שתיצור לינק לתשלום שמשוייך ללקוח שכרגע מחובר, ולאחר מכן תעביר אותו ללינק שמשוייך אליו.
-    
-    דוגמא ליצירת לינק לתשלום שמשוייך ללקוח:
+  <Step title="שלב 1: יצירת לינק תשלום">
+    ```javascript
     const SplitzClient = require('splitz-payments');
     
     const splitz = new SplitzClient({
-      apiKey: 'your-api-key-here'
+      apiKey: 'YOUR_API_KEY_HERE'
     });
     
     const paymentLink = await splitz.paymentLinks.generate({
@@ -63,26 +52,17 @@ title: "חיבור סליקה לאפליקציית base44"
       customer_email: 'האימייל של הלקוח שכרגע מחובר למערכת'
     });
     
-    const url = paymentLink.url;
-    ותעביר את המשתמש לURL שחזר
-    DONT USE ENV FOR API KEY, USE IT AS STRING.
+    console.log(result.url);
+    // return the url to the frontend using return res.json({...
     ```
+
+    This code & all of the other code blocks will be used only in the backend functions in Base44, and not in the frontend.
+
+    All of the interaction of Base44 with Splitz must be implemented using backend, and the results will be passed to the frontend.
   </Step>
   <Step title="אימות תשלום וגישה למערכת">
     השלב השני נועד לבדוק האם הלקוח שלכם אכן שילם אחרי שיצא מלינק התשלום ששלחנו אותו עכשיו, במידה והוא שילם אנחנו מגדירים אותו במערכת כלקוח משלם ונותנים לו גישה למערכת.
 
-    שימו לב שגם בפרומפט הזה יש דבר שאנחנו צריכים לשנות והוא הAPI KEY שלכם למה שמופיע לכם במסך ההגדרות במערכת שלנו.
-
-    ````
-    אני רוצה ליצור עמוד חדש בשם "subscription-success".
-    
-    כשלקוח מגיע לעמוד הזה (אחרי תשלום), אני רוצה:
-    1. לקחת את ה-subscription_uid מה-URL
-    2. לוודא שהמנוי פעיל
-    3. לשייך את המנוי הזה למשתמש בדאטאבייס
-    4. לתת לו גישה למערכת
-    
-    צור Backend Function שעושה:
     ```javascript
     const SplitzClient = require('splitz-payments');
     
@@ -111,10 +91,6 @@ title: "חיבור סליקה לאפליקציית base44"
       console.log('המנוי פג תוקף ❌');
     }
     ```
-    
-    אל תשתמש ב-ENV. השתמש במחרוזת ישירות.
-    הצג מסך טעינה בזמן הבדיקה.
-    ````
   </Step>
 </Steps>
 
@@ -122,20 +98,6 @@ title: "חיבור סליקה לאפליקציית base44"
 
 הפורטל מאפשר ללקוחות שלכם לצפות בפרטי המנוי שלהם, ולבטל או לשנות את המנוי שלהם בהתאם למה שהם רוצים / צריכים.
 
-שימו לב שגם בפרומפט הזה יש דבר שאנחנו צריכים לשנות והוא:
-
-1. הAPI KEY שלכם למה שמופיע לכם במסך ההגדרות במערכת שלנו.
-
-````
-אני רוצה להוסיף כפתור "נהל מנוי" לדף הפרופיל.
-
-הכפתור יהיה זמין רק למשתמשים שיש להם מנוי פעיל.
-
-כשלוחצים עליו:
-1. יצור לינק זמני לניהול מנוי
-2. יעביר את המשתמש ללינק הזה
-
-צור Backend Function:
 ```javascript
 const SplitzClient = require('splitz-payments');
 
@@ -154,11 +116,8 @@ const expiresIn = portal.data.expires_in_hours;
 console.log('לינק ניהול:', managementUrl);
 console.log('פג תוקף בעוד:', expiresIn, 'שעות');
 
-// העבר את המשתמש ל-managementUrl
+// return the url to the frontend using res.json({...
 ```
-
-אל תשתמש ב-ENV.
-````
 
 ## שינוי בין חבילות למנוי
 
@@ -229,7 +188,7 @@ console.log('פג תוקף בעוד:', expiresIn, 'שעות');
 
 ### שליחת בקשה לשינוי תוכנית
 
-```
+```javascript
 const SplitzClient = require('splitz-payments');
 
 const splitz = new SplitzClient({
@@ -307,40 +266,3 @@ console.log('דורש תשלום?', changeRequest.data.requires_payment);
 | `subscription_uid` | string | מזהה המנוי (לאימות)            |
 | `new_plan`         | string | שם התוכנית החדשה (מקודד ב-URL) |
 | `prorated_charge`  | number | הסכום ששולם (או זוכה)          |
-
----
-
-### קוד לטיפול בפרמטרים:
-
-```
-// בעמוד upgrade-success:
-
-// קרא את הפרמטרים מה-URL
-const urlParams = new URLSearchParams(window.location.search);
-
-// בדוק את הסטטוס
-const status = urlParams.get('status');
-
-if (status === 'success') {
-  console.log('✅ שינוי תוכנית הצליח!');
-  
-  // נתונים נוספים:
-  const subscriptionUid = urlParams.get('subscription_uid');
-  const newPlan = decodeURIComponent(urlParams.get('new_plan'));
-  const proratedCharge = urlParams.get('prorated_charge');
-  
-  console.log('מנוי:', subscriptionUid);
-  console.log('תוכנית חדשה:', newPlan);
-  console.log('סכום ששולם:', proratedCharge, '₪');
-  
-  // עדכן את הדאטאבייס:
-  // await updateUserPlan(subscriptionUid, newPlan);
-  
-  // הצג הודעה למשתמש:
-  alert(`מעולה! עברת ל-${newPlan} בהצלחה 🎉`);
-  
-} else if (status === 'failed') {
-  console.log('❌ שינוי תוכנית נכשל');
-  
-  // הצג הודעה
-```
